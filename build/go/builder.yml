@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+
+  psqlcmd:
+    build:
+      context: ../../
+      dockerfile: ./build/go/myapp.dockerfile
+      args:
+        GO_VER: ${GO_VER}
+    image: ${MYAPP_IMAGE:-click/myapp:current}
