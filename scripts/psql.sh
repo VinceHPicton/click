@@ -35,39 +35,15 @@ function client(){
     esac
 }
 
-function network(){
-    local cmd=$1
-    case $cmd in
-        "clean")
-            docker-compose -f ./deployment/compose/docker-compose.yml down
-            rm -rf ./tmp
-            ;;
-        "start")
-            docker-compose -f ./deployment/compose/docker-compose.yml up
-            ;;
-        "stop")
-            docker-compose -f ./deployment/compose/docker-compose.yml down
-            ;;
-        *)
-            echo " [ clean | client | network | start | stop ]"
-            ;;
-    esac
-}
-
 case $COMMAND in
     "client")
         client $SUBCOMMAND
         ;;
     "clean")
-        network stop
-        network clean
         image clean
         ;;
     "image")
         image $SUBCOMMAND
-        ;;
-    "network")
-        network $SUBCOMMAND
         ;;
     *)
         echo "$0 <commands>
@@ -76,7 +52,6 @@ commands:
     clean    to reset psql deployment to empty state
     client   spins up a client app to interact with psql server
     image    build and clean docker images
-    network  clean, start and stop a local network
 "
         ;;
 esac

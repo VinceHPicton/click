@@ -30,6 +30,20 @@ services:
         condition: service_started
     networks:
       - local
+
+  myapp:
+    image: ${MYAPP_IMAGE}
+    container_name: myapp
+    environment:
+      - APP_NAME=myapp
+    ports:
+      - 3030:3030
+    command: /usr/bin/myapp
+    depends_on:
+      defaultserver:
+        condition: service_started
+    networks:
+      - local  
       
 networks:
   local:
