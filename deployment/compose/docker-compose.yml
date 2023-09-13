@@ -44,7 +44,7 @@ services:
       defaultserver:
         condition: service_started
     networks:
-      - local  
+      - local
       
 networks:
   local:

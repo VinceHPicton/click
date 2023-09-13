@@ -1,5 +1,7 @@
-
--- +migrate Up
+-- +goose Up
+-- +goose StatementBegin
+SELECT 'up SQL query';
+-- +goose StatementEnd
 
 CREATE TABLE users (
     id BIGINT PRIMARY KEY,
@@ -46,7 +48,10 @@ CREATE TABLE messages (
     created_at TIMESTAMP NOT NULL
 );
 
--- +migrate Down
+-- +goose Down
+-- +goose StatementBegin
+SELECT 'down SQL query';
+-- +goose StatementEnd
 
 DROP TABLE users;
 
