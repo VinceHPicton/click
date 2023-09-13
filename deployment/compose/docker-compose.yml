@@ -5,6 +5,7 @@ services:
   defaultserver:
     image: postgres:15.1
     container_name: defaultserver
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -43,7 +44,7 @@ services:
       defaultserver:
         condition: service_started
     networks:
-      - local  
+      - local
       
 networks:
   local:

@@ -1,0 +1,5 @@
+development:
+  dialect: postgres
+  datasource: dbname=postgres sslmode=disable user=postgres password=postgres
+  schema: click
+  dir: db/psql/sql/sql-migrate
