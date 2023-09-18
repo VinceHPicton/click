@@ -1,8 +1,6 @@
-ARG GO_VER
+ARG GOAPP_BASE_IMAGE
 
-FROM ${GO_VER} as builder
-
-ARG APP_NAME
+FROM ${GOAPP_BASE_IMAGE} as builder
 
 WORKDIR /opt
 
@@ -13,7 +11,7 @@ COPY ./go.mod ./go.mod
 COPY ./go.sum ./go.sum
 
 RUN go mod download && \
-    env CGO_ENABLED=0 env GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./build/${APP_NAME} ./cmd/myapp
+    env CGO_ENABLED=0 env GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./build/goapp ./cmd/goapp
 
 # Pack linux artefact into scratch container
 FROM scratch
@@ -21,4 +19,4 @@ FROM scratch
 ARG APP_NAME
 
 # Replace app name {goreact} here with name of your choice
-COPY --from=builder /opt/build/${APP_NAME} /usr/bin/${APP_NAME}
+COPY --from=builder /opt/build/goapp /usr/bin/goapp

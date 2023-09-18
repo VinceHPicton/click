@@ -2,9 +2,9 @@ version: '3.7'
 
 services:
 
-  defaultserver:
+  dbserver:
     image: postgres:15.1
-    container_name: defaultserver
+    container_name: dbserver
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -17,9 +17,9 @@ services:
     networks:
       - local
 
-  devops:
+  pgadmin:
     image: dpage/pgadmin4:6.18
-    container_name: devops
+    container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@psql.email
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -27,25 +27,25 @@ services:
     ports:
       - 5050:5050
     depends_on:
-      defaultserver:
+      dbserver:
         condition: service_started
     networks:
       - local
 
-  myapp:
-    image: ${MYAPP_IMAGE}
-    container_name: myapp
+  goapp:
+    image: click/goapp:current
+    container_name: goapp
     environment:
-      - APP_NAME=myapp
+      - APP_NAME=goapp
     ports:
       - 3030:3030
-    command: /usr/bin/myapp
+    command: /usr/bin/goapp
     depends_on:
-      defaultserver:
+      dbserver:
         condition: service_started
     networks:
       - local
       
 networks:
   local:
-    name: $NETWORK
+    name: click_network

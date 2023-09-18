@@ -1,11 +1,17 @@
-# click
+# Click
+The open source, non-profit dating app, focussed on finding people real relationships, not on profits.
 
-Prequisites:
+### Key features:
+- 50% male 50% female ratio with each region, if there is an excess of one gender, they have to wait in a queue until there is space
+- 5 matches per account at a time - if you a new match after you have 5 you must remove some.
 
-* Install docker
-* If you are using Windows, install Unix subsystem.
+## Run locally
+- Run /scripts/build.sh
+- Run /scripts/up.sh
 
-Please refer to:
+## Rebuild locally
+- Stop the containers either with /scripts/down.sh or ctrl+C
+- Run /scripts/clean.sh to reset state of containers
+- Run /scripts/up.sh
 
-* [How to use local Postgres](./docs/psql.md)
 * [Project layout](./docs/layout.md) -- this explains the rationale behind the layout

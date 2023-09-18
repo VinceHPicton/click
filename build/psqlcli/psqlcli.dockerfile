@@ -1,7 +1,7 @@
-ARG OS_VER
+ARG PSQL_CLI_BASE_IMAGE
 
 # App container
-FROM ${OS_VER}
+FROM ${PSQL_CLI_BASE_IMAGE}
 
 RUN apt-get update && \
     apt-get install -y libc6-dev postgresql-client

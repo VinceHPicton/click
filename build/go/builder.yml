@@ -2,10 +2,10 @@ version: '3.7'
 
 services:
 
-  psqlcmd:
+  goapp:
     build:
       context: ../../
-      dockerfile: ./build/go/myapp.dockerfile
+      dockerfile: ./build/go/goapp.dockerfile
       args:
-        GO_VER: ${GO_VER}
-    image: ${MYAPP_IMAGE:-click/myapp:current}
+        GOAPP_BASE_IMAGE: ${GOAPP_BASE_IMAGE}
+    image: ${GOAPP_IMAGE_NAME:-click/goapp:current}
