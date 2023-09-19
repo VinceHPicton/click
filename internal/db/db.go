@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"net"
 
 	_ "github.com/lib/pq"
 )
@@ -18,14 +17,16 @@ const (
 
 func Open() (*sql.DB, error) {
 
-	addrs, err := net.LookupHost(host)
-	if err != nil {
-		return nil, err
-	}
+	// below results in actual IP  address array, atm its just [172.28.0.2], but obv this varies
+	// addrs, err := net.LookupHost(host)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// fmt.Print(addrs)
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		addrs[0], port, user, password, dbname)
+		host, port, user, password, dbname)
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
