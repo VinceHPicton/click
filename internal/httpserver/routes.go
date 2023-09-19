@@ -1,6 +1,7 @@
 package httpserver
 
-func (s *Server) routes() {
+func (s *Server) Routes() {
 
-	s.Router.HandleFunc("/dbping", s.middlewareExample(s.handledbping()))
+	s.Router.HandleFunc("/dbping", s.middlewareExample(s.handleDBping()))
+	s.Router.HandleFunc("/insertTest", s.handleInsertTest())
 }

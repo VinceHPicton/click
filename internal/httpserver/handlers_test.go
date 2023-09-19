@@ -4,9 +4,10 @@ package httpserver
 // 	srv := Server{
 // 		// db: mockDatabase,
 // 	}
-// 	srv.routes()
+// 	srv.Routes()
 // 	req := httptest.NewRequest("GET", "/about", nil)
 // 	w := httptest.NewRecorder()
+// 	// Needs a generic ServeHTTP?
 // 	srv.ServeHTTP(w, req)
 // 	is.Equal(w.StatusCode, http.StatusOK)
 // }

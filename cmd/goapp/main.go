@@ -26,6 +26,8 @@ func main() {
 		Router: router,
 	}
 
+	server.Routes()
+
 	port := 3030
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), server.Router))
 
