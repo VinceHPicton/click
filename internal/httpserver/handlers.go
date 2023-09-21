@@ -5,19 +5,6 @@ import (
 	"net/http"
 )
 
-func (s *Server) handleDBping() http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := s.DB.Ping()
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write([]byte("DB pinged"))
-	}
-}
-
 func (s *Server) handleInsertTest() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -50,5 +37,18 @@ func (s *Server) handleInsertTest() http.HandlerFunc {
 
 		w.Write(rowsAffBytes)
 
+	}
+}
+
+func (s *Server) handleDBping() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := s.DB.Ping()
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write([]byte("DB pinged"))
 	}
 }

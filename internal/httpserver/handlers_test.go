@@ -1,13 +1,23 @@
 package httpserver
 
-// func TestHandleAbout(t *testing.T) {
-// 	srv := Server{
-// 		// db: mockDatabase,
-// 	}
-// 	srv.Routes()
-// 	req := httptest.NewRequest("GET", "/about", nil)
-// 	w := httptest.NewRecorder()
-// 	// Needs a generic ServeHTTP?
-// 	srv.ServeHTTP(w, req)
-// 	is.Equal(w.StatusCode, http.StatusOK)
-// }
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func Test_handleInsertTest(t *testing.T) {
+	srv := Server{
+		// db: mockDatabase,
+	}
+	srv.Routes()
+
+	dbtestURL, err := srv.Router.Get(dbTestRouteName).URL()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	req := httptest.NewRequest(http.MethodGet, dbtestURL.Path, nil)
+	w := httptest.NewRecorder()
+	srv.Router.ServeHTTP(w, req)
+}

@@ -1,7 +1,11 @@
 package httpserver
 
-func (s *Server) Routes() {
+const (
+	dbPingRouteName = "dbping"
+	dbTestRouteName = "insertTest"
+)
 
-	s.Router.HandleFunc("/dbping", s.middlewareExample(s.handleDBping()))
-	s.Router.HandleFunc("/insertTest", s.handleInsertTest())
+func (s *Server) Routes() {
+	s.Router.HandleFunc("/dbping", s.middlewareExample(s.handleDBping())).Name(dbPingRouteName)
+	s.Router.HandleFunc("/insertTest", s.handleInsertTest()).Name(dbTestRouteName)
 }
