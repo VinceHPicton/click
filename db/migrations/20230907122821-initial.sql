@@ -1,7 +1,7 @@
 
 -- +migrate Up
 CREATE TABLE users (
-    id BIGINT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     bio VARCHAR(1000),
     birth_date DATE NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE users (
     email VARCHAR(100),
     sex BIT NOT NULL,
     interested_in SMALLINT NOT NULL,
-    created_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE matches (

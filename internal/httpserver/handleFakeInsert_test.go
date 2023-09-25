@@ -4,11 +4,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 )
+
+type MockDB struct {
+	mock.Mock
+}
 
 func Test_handleInsertTest(t *testing.T) {
 	srv := Server{
-		// db: mockDatabase,
+		// DB: *MockDB,
 	}
 	srv.Routes()
 

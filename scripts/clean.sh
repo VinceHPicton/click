@@ -9,4 +9,5 @@ docker rmi -f $(docker images --filter "dangling=true" -q)
 docker rmi -f ${GOAPP_IMAGE_NAME}
 
 # chmod -R +w ./tmp
-# rm -rf ./tmp
+# chown $USER:$USER tmp/pgdata
+rm -rf ./tmp
