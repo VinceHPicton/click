@@ -10,46 +10,46 @@ import (
 )
 
 type Like struct {
-	ID        int64
-	UserID    int64
-	TargetID  int64
-	CreatedAt time.Time
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"user_id"`
+	TargetID  int64     `json:"target_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Match struct {
-	ID        int64
-	User1ID   int64
-	User2ID   int64
-	CreatedAt time.Time
+	ID        int64     `json:"id"`
+	User1ID   int64     `json:"user_1_id"`
+	User2ID   int64     `json:"user_2_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Message struct {
-	ID        int64
-	UserID    int64
-	TargetID  int64
-	Message   sql.NullString
-	CreatedAt time.Time
+	ID        int64          `json:"id"`
+	UserID    int64          `json:"user_id"`
+	TargetID  int64          `json:"target_id"`
+	Message   sql.NullString `json:"message"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 type User struct {
-	ID               int64
-	Name             string
-	Bio              sql.NullString
-	BirthDate        time.Time
-	LastLocationLong sql.NullString
-	LastLocationLat  sql.NullString
-	Mobile           sql.NullString
-	LastActive       sql.NullTime
-	Email            sql.NullString
-	Sex              interface{}
-	InterestedIn     int16
-	CreatedAt        sql.NullTime
+	ID               int64          `json:"id"`
+	Name             string         `json:"name"`
+	Bio              string         `json:"bio"`
+	BirthDate        time.Time      `json:"birth_date"`
+	LastLocationLong sql.NullString `json:"last_location_long"`
+	LastLocationLat  sql.NullString `json:"last_location_lat"`
+	Mobile           string         `json:"mobile"`
+	LastActive       sql.NullTime   `json:"last_active"`
+	Email            string         `json:"email"`
+	Sex              interface{}    `json:"sex"`
+	InterestedIn     int16          `json:"interested_in"`
+	CreatedAt        sql.NullTime   `json:"created_at"`
 }
 
 type UserPhoto struct {
-	ID        int64
-	UserID    int64
-	Url       sql.NullString
-	Hash      string
-	CreatedAt time.Time
+	ID        int64          `json:"id"`
+	UserID    int64          `json:"user_id"`
+	Url       sql.NullString `json:"url"`
+	Hash      string         `json:"hash"`
+	CreatedAt time.Time      `json:"created_at"`
 }

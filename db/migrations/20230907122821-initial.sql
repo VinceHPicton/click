@@ -3,13 +3,13 @@
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
-    bio VARCHAR(1000),
+    bio VARCHAR(1000) NOT NULL,
     birth_date DATE NOT NULL,
     last_location_long DECIMAL(9,6),
     last_location_lat DECIMAL(9,6),
-    mobile VARCHAR(20),
+    mobile VARCHAR(20) NOT NULL,
     last_active TIMESTAMP,
-    email VARCHAR(100),
+    email VARCHAR(100) NOT NULL,
     sex BIT NOT NULL,
     interested_in SMALLINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

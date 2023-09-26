@@ -7,31 +7,26 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
-  name, bio, birth_date, last_location_long, last_location_lat,
-  mobile, last_active, email, sex, interested_in
+  name, bio, birth_date, mobile, email, sex, interested_in
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+  $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING id, name, bio, birth_date, last_location_long, last_location_lat, mobile, last_active, email, sex, interested_in, created_at
 `
 
 type CreateUserParams struct {
-	Name             string
-	Bio              sql.NullString
-	BirthDate        time.Time
-	LastLocationLong sql.NullString
-	LastLocationLat  sql.NullString
-	Mobile           sql.NullString
-	LastActive       sql.NullTime
-	Email            sql.NullString
-	Sex              interface{}
-	InterestedIn     int16
+	Name         string      `json:"name"`
+	Bio          string      `json:"bio"`
+	BirthDate    time.Time   `json:"birth_date"`
+	Mobile       string      `json:"mobile"`
+	Email        string      `json:"email"`
+	Sex          interface{} `json:"sex"`
+	InterestedIn int16       `json:"interested_in"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -39,10 +34,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Name,
 		arg.Bio,
 		arg.BirthDate,
-		arg.LastLocationLong,
-		arg.LastLocationLat,
 		arg.Mobile,
-		arg.LastActive,
 		arg.Email,
 		arg.Sex,
 		arg.InterestedIn,
