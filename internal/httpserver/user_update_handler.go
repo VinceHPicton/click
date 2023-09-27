@@ -6,7 +6,7 @@ import (
 	"vincehpicton/click/internal/db"
 )
 
-func (s *Server) handleCreateUser() http.HandlerFunc {
+func (s *Server) handleUpdateUser() http.HandlerFunc {
 	type request struct {
 	}
 	type response struct {
@@ -15,26 +15,20 @@ func (s *Server) handleCreateUser() http.HandlerFunc {
 
 		queries := db.New(s.DB)
 
-		createUserParams := db.CreateUserParams{}
+		updateUserParams := db.UpdateUserParams{}
 
-		err := json.NewDecoder(r.Body).Decode(&createUserParams)
+		err := json.NewDecoder(r.Body).Decode(&updateUserParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		user, err := queries.CreateUser(r.Context(), createUserParams)
+		_, err = queries.UpdateUser(r.Context(), updateUserParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		_, err = queries.GetUser(r.Context(), user.ID)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write([]byte("SUccess!"))
+		w.WriteHeader(http.StatusOK)
 	}
 }

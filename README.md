@@ -15,3 +15,9 @@ The open source, non-profit dating app, focussed on finding people real relation
 - Run /scripts/up.sh
 
 * [Project layout](./docs/layout.md) -- this explains the rationale behind the layout
+
+## Tools list
+- atlas for DB migrations
+- Docker
+- Pgadmin
+- sqlc

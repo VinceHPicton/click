@@ -1,0 +1,14 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "click",
+            "Group": "Servers",
+            "Port": 5432,
+            "Username": "postgres",
+            "Password": "postgres",
+            "Host": "dbserver",
+            "SSLMode": "prefer",
+            "MaintenanceDB": "postgres"
+        }
+    }
+}

@@ -1,7 +1,10 @@
 
 -- +migrate Up
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     bio VARCHAR(1000) NOT NULL,
     birth_date DATE NOT NULL,
@@ -16,21 +19,21 @@ CREATE TABLE users (
 );
 
 CREATE TABLE matches (
-    id BIGINT PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_1_id BIGINT NOT NULL,
     user_2_id BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE likes (
-    id BIGINT PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id BIGINT NOT NULL,
     target_id BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE user_photos (
-    id BIGINT PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id BIGINT NOT NULL,
     url VARCHAR(4000),
     hash VARCHAR(64) NOT NULL,
@@ -38,7 +41,7 @@ CREATE TABLE user_photos (
 );
 
 CREATE TABLE messages (
-    id BIGINT PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id BIGINT NOT NULL,
     target_id BIGINT NOT NULL,
     message VARCHAR(4000),
