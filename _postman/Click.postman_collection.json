@@ -1,0 +1,232 @@
+{
+	"info": {
+		"_postman_id": "dfdab201-0081-45e6-977e-b523cfb30083",
+		"name": "Click",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16145110",
+		"_collection_link": "https://click-283252.postman.co/workspace/click-283252-Workspace~e7bac157-1266-49e5-8cc6-f311cb329934/collection/16145110-dfdab201-0081-45e6-977e-b523cfb30083?action=share&source=collection_link&creator=16145110"
+	},
+	"item": [
+		{
+			"name": "dbping",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{GOAPP_ADDR}}:{{GOAPP_PORT}}/dbping",
+					"host": [
+						"{{GOAPP_ADDR}}"
+					],
+					"port": "{{GOAPP_PORT}}",
+					"path": [
+						"dbping"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create user",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"vince\",\n    \"bio\": \"\\\" or \\\"\\\"=\\\"\",\n    \"birth_date\": \"2023-09-26T12:34:56Z\",\n    \"mobile\": \"ffff\",\n    \"email\": \"105; DROP TABLE users\",\n    \"sex\": 1,\n    \"interested_in\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{GOAPP_ADDR}}:{{GOAPP_PORT}}/users",
+					"host": [
+						"{{GOAPP_ADDR}}"
+					],
+					"port": "{{GOAPP_PORT}}",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update user",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"{{TEST_USER_ID}}\",\n    \"name\": \"UPDATED\",\n    \"bio\": \"UPDATED\",\n    \"birth_date\": \"2023-09-26T12:34:56Z\",\n    \"mobile\": \"aaaa\",\n    \"email\": \"105; DROP TABLE users\",\n    \"sex\": 1,\n    \"interested_in\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{GOAPP_ADDR}}:{{GOAPP_PORT}}/users",
+					"host": [
+						"{{GOAPP_ADDR}}"
+					],
+					"port": "{{GOAPP_PORT}}",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete user",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"{{TEST_USER_ID}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{GOAPP_ADDR}}:{{GOAPP_PORT}}/users",
+					"host": [
+						"{{GOAPP_ADDR}}"
+					],
+					"port": "{{GOAPP_PORT}}",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"{{TEST_USER_ID}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{GOAPP_ADDR}}:{{GOAPP_PORT}}/users",
+					"host": [
+						"{{GOAPP_ADDR}}"
+					],
+					"port": "{{GOAPP_PORT}}",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"const reqUrl = pm.request.url.toString();",
+					"",
+					"if (reqUrl.includes(\"/users\") && pm.request.method != 'POST') {",
+					"",
+					"    let url = pm.environment.get('GOAPP_ADDR') + ':' + pm.environment.get('GOAPP_PORT') + '/users'",
+					"",
+					"    let requestBody = {",
+					"        \"name\": \"FROM PRE-REQUEST\",",
+					"        \"bio\": \"weg\",",
+					"        \"birth_date\": \"2023-09-26T12:34:56Z\",",
+					"        \"mobile\": \"ffff\",",
+					"        \"email\": \"105; DROP TABLE users\",",
+					"        \"sex\": 1,",
+					"        \"interested_in\": 1",
+					"    };",
+					"",
+					"    let requestHeaders = {",
+					"        'content-type': 'application/json',",
+					"    };",
+					"",
+					"    // Create the request object",
+					"    const requestDetails = {",
+					"        url: url,",
+					"        method: 'POST',",
+					"        header: requestHeaders,",
+					"        body: {",
+					"            mode: 'raw',",
+					"            raw: JSON.stringify(requestBody)",
+					"        }",
+					"    };",
+					"",
+					"    pm.sendRequest(requestDetails, function (err, response) {",
+					"        if (err) {",
+					"            console.log(err);",
+					"        }",
+					"        else {",
+					"            pm.environment.set(\"TEST_USER_ID\", response.json().id);",
+					"        }",
+					"    });",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
