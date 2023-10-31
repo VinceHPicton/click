@@ -1,4 +1,4 @@
--- name: UpdateUser :one
+-- name: UserUpdate :one
 UPDATE users
   set
   name = $8,

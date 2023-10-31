@@ -43,7 +43,7 @@ type User struct {
 	Mobile           string         `json:"mobile"`
 	LastActive       sql.NullTime   `json:"last_active"`
 	Email            string         `json:"email"`
-	Sex              interface{}    `json:"sex"`
+	Sex              int16          `json:"sex"`
 	InterestedIn     int16          `json:"interested_in"`
 	CreatedAt        sql.NullTime   `json:"created_at"`
 }

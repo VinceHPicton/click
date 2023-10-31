@@ -1,5 +1,5 @@
--- name: CreateUser :one
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- name: UserCreate :one
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 INSERT INTO users (
   name, bio, birth_date, mobile, email, sex, interested_in

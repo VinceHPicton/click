@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Server) handleDeleteUser() http.HandlerFunc {
+func (s *Server) userDeleteHandler() http.HandlerFunc {
 	type request struct {
 		ID string `json:"id"`
 	}
@@ -32,7 +32,7 @@ func (s *Server) handleDeleteUser() http.HandlerFunc {
 			return
 		}
 
-		err = queries.DeleteUser(r.Context(), uuid)
+		err = queries.UserDelete(r.Context(), uuid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

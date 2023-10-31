@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Server) handleGetUser() http.HandlerFunc {
+func (s *Server) userGetHandler() http.HandlerFunc {
 	type request struct {
 		ID string `json:"id"`
 	}
@@ -32,7 +32,7 @@ func (s *Server) handleGetUser() http.HandlerFunc {
 			return
 		}
 
-		user, err := queries.GetUser(r.Context(), uuid)
+		user, err := queries.UserGet(r.Context(), uuid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
