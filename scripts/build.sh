@@ -4,9 +4,5 @@ set -e
 
 . ./config/env.sh
 
-# mkdir tmp
-# chown $USER:$USER tmp
-# mkdir tmp/pgdata
-# chown $USER:$USER tmp/pgdata
 sqlc generate
-docker-compose -f ./build/go/builder.yml build 
+docker-compose -f ./build/go/builder.yml build

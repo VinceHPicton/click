@@ -4,29 +4,37 @@ import (
 	"encoding/json"
 	"net/http"
 	"vincehpicton/click/internal/db"
+
+	"github.com/google/uuid"
 )
 
-func (s *Server) handleCreateUser() http.HandlerFunc {
+func (s *Server) handleGetUser() http.HandlerFunc {
 	type request struct {
+		ID string `json:"id"`
 	}
 	type response struct {
-		id string
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		queries := db.New(s.DB)
 
-		createUserParams := db.CreateUserParams{}
+		getUserParams := request{}
 
-		err := json.NewDecoder(r.Body).Decode(&createUserParams)
+		err := json.NewDecoder(r.Body).Decode(&getUserParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		user, err := queries.CreateUser(r.Context(), createUserParams)
+		uuid, err := uuid.Parse(getUserParams.ID)
 		if err != nil {
-			w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		user, err := queries.GetUser(r.Context(), uuid)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -37,5 +45,7 @@ func (s *Server) handleCreateUser() http.HandlerFunc {
 		}
 
 		w.Write(userJsonBytes)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }

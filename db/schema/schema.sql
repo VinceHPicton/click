@@ -10,7 +10,7 @@ CREATE TABLE users (
     mobile VARCHAR(20) NOT NULL,
     last_active TIMESTAMP,
     email VARCHAR(100) NOT NULL,
-    sex BIT NOT NULL,
+    sex SMALLINT NOT NULL,
     interested_in SMALLINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -17,23 +17,6 @@ services:
     networks:
       - local
 
-  migration:
-    image: dpage/pgadmin4:6.18
-    container_name: migration
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@psql.email
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_LISTEN_PORT: 5050
-    ports:
-      - 5050:5050
-    depends_on:
-      dbserver:
-        condition: service_started
-    volumes:
-      - $PWD/pgadmin_servers.json:/pgadmin4/servers.json
-    networks:
-      - local
-
   pgadmin:
     image: dpage/pgadmin4:6.18
     container_name: pgadmin
