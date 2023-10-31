@@ -1,28 +1,42 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 
-	"vincehpicton/click/internal/db"
 	"vincehpicton/click/internal/httpserver"
 
 	"github.com/gorilla/mux"
+
+	_ "github.com/lib/pq"
+)
+
+const (
+	host     = "dbserver"
+	port     = 5432
+	user     = "postgres"
+	password = "postgres"
+	dbname   = "postgres"
 )
 
 func main() {
 
-	db, err := db.Open()
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	conn, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer conn.Close()
 
 	router := mux.NewRouter()
 
 	server := httpserver.Server{
-		DB:     db,
+		DB:     conn,
 		Router: router,
 	}
 

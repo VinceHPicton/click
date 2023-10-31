@@ -2,10 +2,10 @@
 
 This project is as follows:
 
-* [./build](../build/) - contains script to build images
-* [./db](../db/) - contains local psql server configuration script
-* [./scripts](../scripts/) - contain bash script to support project operations such as building code.
+* [./build](../build/) - contains scripts to build various images
+* [./db](../db/) - contains all db files (including those for sqlc and Atlas), such as migrations, seed data, raw sql queries, declarative schema
+* [./scripts](../scripts/) - contains bash scripts to support project operations such as building code.
 
 The following are generated folders:
 
-* [./tmp/pgdata](../tmp/pgdata) -- contains files to hold local postgress data files 
+* [./tmp/pgdata](../tmp/pgdata) -- contains files to hold local postgres data files 
