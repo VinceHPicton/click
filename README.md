@@ -10,13 +10,14 @@ The open source, non-profit dating app, focussed on finding people real relation
 - Run /scripts/clean.sh to reset state of containers
 - Run /scripts/up.sh
 
-* [Project layout](./docs/layout.md) -- this explains the rationale behind the layout
-
 ## Tools/technologies docs with reasoning for choices
 - [Atlas](./docs/atlas.md)
 - [Docker](./docs/docker.md)
 - [pgadmin](./docs/pgadmin.md)
 - [sqlc](./docs/sqlc.md)
+
+## Other docs
+- [Project layout](./docs/layout.md) -- this explains the rationale behind the layout
 
 ### Key features/USP of this app:
 - 50% male 50% female ratio with each region, if there is an excess of one gender, they have to wait in a queue until there is space
