@@ -2,7 +2,7 @@
 
 . ./config/env.sh
 
-# The below achieves the same but using docker
+# This achieves the same as the below command but using docker
 # docker run --rm --net=host \
 #   -v $(pwd)/migrations:/migrations \
 #   arigaio/atlas migrate apply \
