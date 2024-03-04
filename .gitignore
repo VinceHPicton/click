@@ -19,3 +19,5 @@
 
 ## temp file
 tmp/
+
+internal/db/
