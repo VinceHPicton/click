@@ -8,4 +8,4 @@ services:
       dockerfile: ./build/psql/psqlcli.dockerfile
       args:
         PSQL_CLI_BASE_IMAGE: ${PSQL_CLI_BASE_IMAGE}
-    image: ${PSQL_CLI_IMAGE_NAME:-go-db/psqlcli:current}
+    image: ${PSQL_CLI_IMAGE_NAME}
