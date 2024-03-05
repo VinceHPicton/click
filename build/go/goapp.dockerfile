@@ -18,5 +18,4 @@ FROM scratch
 
 ARG APP_NAME
 
-# Replace app name {goreact} here with name of your choice
 COPY --from=builder /opt/build/goapp /usr/bin/goapp
