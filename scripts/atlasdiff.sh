@@ -11,5 +11,5 @@
 
 atlas migrate diff $1 \
 --dir "file://db/migrations" \
---to "file://db/schema/schema.sql" \
+--to "file://db/schema/0_schema.sql" \
 --dev-url "docker://postgres/16"

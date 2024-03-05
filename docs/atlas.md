@@ -8,7 +8,7 @@ https://atlasgo.io/guides/frameworks/sqlc-versioned
 
 
 ### Workflow to change the DB with Atlas + sqlc
-1. Change the schema (schema.sql) to your newly desired database state (adding/deleting columns, tables etc etc)
+1. Change the schema (0_schema.sql) to your newly desired database state (adding/deleting columns, tables etc etc)
 1b. Optionally update the queries (query.sql)
 2. Run `sqlc generate` to ensure the Go database layer reflects your changes
 3. Run the `atlas migrate diff` command with required flags (premade `atlasdiff.sh`) generate the required new migration file which will bring about the desired DB state
