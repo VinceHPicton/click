@@ -2,9 +2,11 @@
 The open source, non-profit dating app, focused on finding people real relationships, not on profits.
 
 ## Run locally
-```docker compose build```
+- Create a .env file locally, based on .env.example
 
-```docker compose up```
+- Run ```docker compose build```
+
+- Run ```docker compose up```
 
 ## Tools/technologies docs with reasoning for choices
 - [Atlas](./docs/atlas.md)
