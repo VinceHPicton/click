@@ -2,7 +2,7 @@
 
 set -e
 
-. ./config/env.sh
+source .env
 
 ./scripts/clean.sh
 ./scripts/build.sh

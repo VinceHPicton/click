@@ -1,6 +1,8 @@
 #!/bin/bash
 
-. ./config/env.sh
+source .env
 
-docker-compose -f ./build/psqlcli/builder.yml build # --> this is for psql commands, not pgadmin or db server
-docker-compose -f ./build/go/builder.yml build
+./scripts/build.sh
+docker build . -f ./build/psqlcli.dockerfile --build-arg PSQL_CLI_BASE_IMAGE=${PSQL_CLI_BASE_IMAGE} -t ${PSQL_CLI_IMAGE_NAME}
+
+# docker-compose -f ./build/psqlcli/builder.yml build
