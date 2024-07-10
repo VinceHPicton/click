@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"vincehpicton/click/internal/httpserver"
 
@@ -13,19 +14,23 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "dbserver"
-	port     = 5432
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "postgres"
-)
-
 func main() {
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+	// Useful if you need to run the app locally ever, you will need dependency "github.com/joho/godotenv"
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file: %v", err.Error())
+	// }
+
+	dbhost := os.Getenv("DB_ADDR")
+	dbport := os.Getenv("DB_PORT")
+	dbuser := os.Getenv("DB_USER")
+	dbpassword := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		dbhost, dbport, dbuser, dbpassword, dbname)
 
 	conn, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
@@ -42,7 +47,7 @@ func main() {
 
 	server.Routes()
 
-	port := 3030
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), server.Router))
+	appPort := os.Getenv("GOAPP_PORT")
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", appPort), server.Router))
 
 }

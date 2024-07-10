@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./config/env.sh
+source .env
 
 # How to use this script:
 # This script compares schema.sql (your desired database state) to what would be achieved by running 
@@ -11,5 +11,5 @@
 
 atlas migrate diff $1 \
 --dir "file://db/migrations" \
---to "file://db/schema/schema.sql" \
+--to "file://db/schema/0_schema.sql" \
 --dev-url "docker://postgres/16"
