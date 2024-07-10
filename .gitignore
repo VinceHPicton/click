@@ -21,3 +21,5 @@
 tmp/
 
 internal/db/
+
+.vscode
