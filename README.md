@@ -2,13 +2,8 @@
 The open source, non-profit dating app, focused on finding people real relationships, not on profits.
 
 ## Run locally
-- Run /scripts/build.sh
-- Run /scripts/up.sh
-
-## Rebuild locally
-- Stop the containers either with /scripts/down.sh or ctrl+C
-- Run /scripts/clean.sh to reset state of containers
-- Run /scripts/up.sh
+```docker compose build```
+```docker compose up```
 
 ## Tools/technologies docs with reasoning for choices
 - [Atlas](./docs/atlas.md)
