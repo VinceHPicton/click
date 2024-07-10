@@ -3,6 +3,7 @@ The open source, non-profit dating app, focused on finding people real relations
 
 ## Run locally
 ```docker compose build```
+
 ```docker compose up```
 
 ## Tools/technologies docs with reasoning for choices
