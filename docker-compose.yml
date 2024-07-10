@@ -1,46 +1,47 @@
 version: '3.7'
 
 services:
-
   dbserver:
-    image: postgres:15.1
-    container_name: dbserver
+    image: ${DB_CUSTOM_IMAGE_NAME}
+    container_name: ${DB_CONTAINER_NAME}
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      # POSTGRES_DB: default
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - 5432:5432
-    volumes:
-      - $PWD/tmp/pgdata:/var/lib/postgresql/data
     networks:
       - local
 
   pgadmin:
-    image: dpage/pgadmin4:6.18
-    container_name: pgadmin
+    image: ${PGADMIN_CUSTOM_IMAGE_NAME}
+    container_name: ${PGADMIN_CONTAINER_NAME}
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@psql.email
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_LISTEN_PORT: 5050
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: ${PGADMIN_PORT}
     ports:
-      - 5050:5050
+      - ${PGADMIN_PORT}:${PGADMIN_PORT}
     depends_on:
       dbserver:
         condition: service_started
-    volumes:
-      - $PWD/pgadmin_servers.json:/pgadmin4/servers.json
     networks:
       - local
 
   goapp:
-    image: click/goapp:current
-    container_name: goapp
+    image: ${GOAPP_IMAGE_NAME}
+    container_name: ${GOAPP_CONTAINER_NAME}
     environment:
-      - APP_NAME=goapp
+      APP_NAME: goapp
+      DB_ADDR: ${DB_ADDR}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      GOAPP_PORT: ${GOAPP_PORT}
     ports:
-      - 3030:3030
+      - ${GOAPP_PORT}:${GOAPP_PORT}
     command: /usr/bin/goapp
     depends_on:
       dbserver:
@@ -50,4 +51,4 @@ services:
       
 networks:
   local:
-    name: click_network
+    name: ${NETWORK_NAME}

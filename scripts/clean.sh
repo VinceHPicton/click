@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./config/env.sh
+source .env
 
 docker-compose -f ./docker-compose.yml down --volumes
 docker volume prune -f

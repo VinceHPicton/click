@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./config/env.sh
+source .env
 
 # This achieves the same as the below command but using docker
 # docker run --rm --net=host \

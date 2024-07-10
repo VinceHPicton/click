@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./config/env.sh
+source .env
 
 # How to use this script:
 # This script compares schema.sql (your desired database state) to what would be achieved by running 
