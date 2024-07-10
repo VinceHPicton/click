@@ -9,7 +9,6 @@ WORKDIR /opt
 COPY ./cmd ./cmd
 COPY ./internal ./internal
 
-COPY .env .env
 COPY ./go.mod ./go.mod
 COPY ./go.sum ./go.sum
 
@@ -22,7 +21,6 @@ FROM alpine
 
 ARG APP_NAME
 
-COPY --from=builder /opt/.env /usr/bin/.env
 COPY --from=builder /opt/build/goapp /usr/bin/goapp
 
 ENTRYPOINT ./usr/bin/goapp
