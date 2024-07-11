@@ -4,8 +4,8 @@
             "Name": "click",
             "Group": "Servers",
             "Port": 5432,
-            "Username": "postgres",
-            "Password": "postgres",
+            "Username": "pguser",
+            "Password": "pgpass",
             "Host": "dbserver",
             "SSLMode": "prefer",
             "MaintenanceDB": "postgres"
