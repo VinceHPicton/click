@@ -4,6 +4,8 @@ The open source, non-profit dating app, focused on finding people real relations
 ## Run locally
 - Create a .env file locally, based on .env.example
 
+- Run ```sqlc generate``` to generate the db package
+
 - Run ```docker compose build```
 
 - Run ```docker compose up```
