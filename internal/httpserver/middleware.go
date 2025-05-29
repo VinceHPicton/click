@@ -11,3 +11,10 @@ func (s *Server) middlewareExample(prevHandler http.HandlerFunc) http.HandlerFun
 		prevHandler(w, r)
 	}
 }
+
+func (s *Server) corsMiddleware(prevHandler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
+		prevHandler(w, r)
+	}
+}
