@@ -1,3 +1,5 @@
+-- Create "register_attempts" table
+CREATE TABLE "public"."register_attempts" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "mobile" character varying(20) NOT NULL, "one_time_code" integer NOT NULL DEFAULT (floor(((random() * (900000)::double precision) + (100000)::double precision)))::integer, "used_at" timestamp NULL, "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY ("id"));
 -- Create "users" table
 CREATE TABLE "public"."users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(50) NOT NULL, "bio" character varying(1000) NOT NULL, "birth_date" date NOT NULL, "last_location_long" numeric(9,6) NULL, "last_location_lat" numeric(9,6) NULL, "mobile" character varying(20) NOT NULL, "last_active" timestamp NULL, "email" character varying(100) NOT NULL, "sex" smallint NOT NULL, "interested_in" smallint NOT NULL, "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY ("id"));
 -- Create "likes" table

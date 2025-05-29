@@ -1,5 +1,13 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE TABLE register_attempts (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    mobile VARCHAR(20) NOT NULL,
+    one_time_code INTEGER NOT NULL DEFAULT (FLOOR(RANDOM() * 900000 + 100000))::INT,
+    used_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE users (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
