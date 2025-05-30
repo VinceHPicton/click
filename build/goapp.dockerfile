@@ -1,8 +1,8 @@
 ARG GOAPP_BASE_IMAGE
 
-FROM ${GOAPP_BASE_IMAGE}-alpine as builder
+FROM ${GOAPP_BASE_IMAGE} as builder
 
-# FROM golang:1.20 as builder
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 
 WORKDIR /opt
 
@@ -10,16 +10,6 @@ COPY ./cmd ./cmd
 COPY ./internal ./internal
 COPY ./db ./db
 COPY sqlc.yaml .
-
-# Install dependencies
-RUN apk add --no-cache curl 
-
-# ENV SQLC_VERSION=1.29.0
-ARG SQLC_VERSION
-
-# Download and install sqlc
-RUN curl -L https://github.com/sqlc-dev/sqlc/releases/download/v${SQLC_VERSION}/sqlc_${SQLC_VERSION}_linux_amd64.tar.gz \
-    | tar -xz -C /usr/local/bin
 
 RUN sqlc generate
 

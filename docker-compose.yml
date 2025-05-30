@@ -42,7 +42,6 @@ services:
       dockerfile: ./build/goapp.dockerfile
       args:
         GOAPP_BASE_IMAGE: ${GOAPP_BASE_IMAGE}
-        SQLC_VERSION: 1.27.0
     image: ${GOAPP_IMAGE_NAME}
     container_name: ${GOAPP_CONTAINER_NAME}
     environment:
