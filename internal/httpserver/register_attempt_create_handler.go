@@ -10,9 +10,6 @@ func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
 	type request struct {
 		Mobile string `json:"mobile"`
 	}
-	type response struct {
-		id string
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		queries := db.New(s.DB)
@@ -25,18 +22,12 @@ func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
 			return
 		}
 
-		registerAttempt, err := queries.RegisterAttemptCreate(r.Context(), createRegisterAttemptParams.Mobile)
+		_, err = queries.RegisterAttemptCreate(r.Context(), createRegisterAttemptParams.Mobile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		returnJsonBytes, err := json.Marshal(registerAttempt)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Write(returnJsonBytes)
+		w.WriteHeader(http.StatusOK)
 	}
 }
