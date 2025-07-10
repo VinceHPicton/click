@@ -6,10 +6,22 @@ import (
 	"vincehpicton/click/internal/db"
 )
 
-func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
-	type request struct {
-		Mobile string `json:"mobile"`
+type request struct {
+	Mobile string `json:"mobile"`
+}
+
+func (r request) Valid() bool {
+	if len(r.Mobile) == 0 {
+		return false
 	}
+	return true
+}
+
+type response struct {
+	OneTimeCode string `json:"oneTimeCode"`
+}
+
+func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		queries := db.New(s.DB)
@@ -22,12 +34,24 @@ func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
 			return
 		}
 
-		_, err = queries.RegisterAttemptCreate(r.Context(), createRegisterAttemptParams.Mobile)
+		registerAttempt, err := queries.RegisterAttemptCreate(r.Context(), createRegisterAttemptParams.Mobile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		responseBytes, err := json.Marshal(registerAttempt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if !createRegisterAttemptParams.Valid() {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.Write(responseBytes)
+		// w.WriteHeader(http.StatusOK)
 	}
 }
