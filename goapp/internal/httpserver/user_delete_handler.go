@@ -1,14 +1,14 @@
 package httpserver
 
 import (
+	"vincehpicton/click/internal/db"
 	"encoding/json"
 	"net/http"
-	"vincehpicton/click/internal/db"
 
 	"github.com/google/uuid"
 )
 
-func (s *Server) userGetHandler() http.HandlerFunc {
+func (s *Server) userDeleteHandler() http.HandlerFunc {
 	type request struct {
 		ID string `json:"id"`
 	}
@@ -18,33 +18,25 @@ func (s *Server) userGetHandler() http.HandlerFunc {
 
 		queries := db.New(s.DB)
 
-		getUserParams := request{}
+		deleteUserParams := request{}
 
-		err := json.NewDecoder(r.Body).Decode(&getUserParams)
+		err := json.NewDecoder(r.Body).Decode(&deleteUserParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		uuid, err := uuid.Parse(getUserParams.ID)
+		uuid, err := uuid.Parse(deleteUserParams.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		user, err := queries.UserGet(r.Context(), uuid)
+		err = queries.UserDelete(r.Context(), uuid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		userJsonBytes, err := json.Marshal(user)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Write(userJsonBytes)
 
 		w.WriteHeader(http.StatusOK)
 	}

@@ -20,7 +20,7 @@ func Test_handleInsertTest(t *testing.T) {
 
 	dbtestURL, err := srv.Router.Get(dbTestRouteName).URL()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf("failed to build route URL: %v", err)
 	}
 
 	req := httptest.NewRequest(http.MethodGet, dbtestURL.Path, nil)

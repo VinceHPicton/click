@@ -3,6 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"net/http"
+
 	"vincehpicton/click/internal/db"
 )
 
@@ -11,6 +12,7 @@ func (s *Server) userCreateHandler() http.HandlerFunc {
 	}
 	type response struct {
 		id string
+		
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 

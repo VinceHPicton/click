@@ -1,9 +1,9 @@
 package httpserver
 
 import (
+	"vincehpicton/click/internal/db"
 	"encoding/json"
 	"net/http"
-	"vincehpicton/click/internal/db"
 )
 
 func (s *Server) userUpdateHandler() http.HandlerFunc {

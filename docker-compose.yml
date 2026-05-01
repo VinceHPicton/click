@@ -21,7 +21,7 @@ services:
     env_file: .env
     build:
       context: .
-      dockerfile: ./build/goapp.dockerfile
+      dockerfile: ./goapp/goapp.dockerfile
       args:
         GOAPP_BASE_IMAGE: golang:1.26
     image: click/goapp

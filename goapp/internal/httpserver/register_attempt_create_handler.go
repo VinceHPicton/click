@@ -1,9 +1,9 @@
 package httpserver
 
 import (
+	"vincehpicton/click/internal/db"
 	"encoding/json"
 	"net/http"
-	"vincehpicton/click/internal/db"
 )
 
 type request struct {

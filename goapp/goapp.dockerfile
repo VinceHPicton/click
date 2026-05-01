@@ -6,18 +6,18 @@ RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 
 WORKDIR /opt
 
-COPY ./cmd ./cmd
-COPY ./internal ./internal
+COPY ./goapp/cmd ./cmd
+COPY ./goapp/internal ./internal
 COPY ./db ./db
 COPY sqlc.yaml .
 
 RUN sqlc generate
 
-COPY ./go.mod ./go.mod
-COPY ./go.sum ./go.sum
+COPY ./goapp/go.mod ./go.mod
+COPY ./goapp/go.sum ./go.sum
 
-RUN go mod download && \
-    env CGO_ENABLED=0 env GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./build/goapp ./cmd/goapp
+RUN go mod download
+RUN env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./build/goapp ./cmd/main.go
 
 # Pack linux artefact into scratch container
 FROM alpine
