@@ -1,6 +1,6 @@
-ARG DB_BASE_IMAGE
+ARG DB_BASE_IMAGE=postgres:18.3
 
 FROM ${DB_BASE_IMAGE}
 
-COPY /db/seeds /docker-entrypoint-initdb.d/
+# COPY /db/seeds /docker-entrypoint-initdb.d/
 COPY /db/schema/0_schema.sql /docker-entrypoint-initdb.d/

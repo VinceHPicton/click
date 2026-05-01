@@ -1,4 +1,4 @@
-ARG GOAPP_BASE_IMAGE
+ARG GOAPP_BASE_IMAGE=golang:1.26
 
 FROM ${GOAPP_BASE_IMAGE} as builder
 
@@ -20,7 +20,6 @@ RUN go mod download && \
     env CGO_ENABLED=0 env GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ./build/goapp ./cmd/goapp
 
 # Pack linux artefact into scratch container
-# FROM scratch
 FROM alpine
 
 ARG APP_NAME
