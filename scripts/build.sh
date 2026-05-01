@@ -4,7 +4,7 @@ set -e
 
 source .env
 
-sqlc generate
+# sqlc generate
 
 docker build . -f ./build/goapp.dockerfile --build-arg GOAPP_BASE_IMAGE=${GOAPP_BASE_IMAGE} -t ${GOAPP_IMAGE_NAME}
 docker build . -f ./build/dbserver.dockerfile --build-arg DB_BASE_IMAGE=${DB_BASE_IMAGE} -t ${DB_CUSTOM_IMAGE_NAME}

@@ -1,9 +1,10 @@
 services:
   dbserver:
+    env_file: .env
     build:
       dockerfile: ./build/dbserver.dockerfile
       args:
-        DB_BASE_IMAGE: postgres:16.1
+        DB_BASE_IMAGE: postgres:latest
     image: click/dbserver
     container_name: click-dbserver
     restart: always
@@ -12,31 +13,12 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - 5432:5432
-    networks:
-      - local
-
-  pgadmin:
-    build:
-      dockerfile: ./build/pgadmin.dockerfile
-      args:
-        PGADMIN_SERVERS_FILENAME: pgadmin_servers.json
-        PGADMIN_BASE_IMAGE: dpage/pgadmin4:latest
-    image: click/pgadmin
-    container_name: click-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      PGADMIN_LISTEN_PORT: ${PGADMIN_PORT}
-    ports:
-      - ${PGADMIN_PORT}:${PGADMIN_PORT}
-    depends_on:
-      dbserver:
-        condition: service_started
+      - ${DB_PORT}:${DB_PORT}
     networks:
       - local
 
   goapp:
+    env_file: .env
     build:
       context: .
       dockerfile: ./build/goapp.dockerfile
@@ -60,6 +42,27 @@ services:
         condition: service_started
     networks:
       - local
+
+  # pgadmin:
+  #   env_file: .env
+  #   build:
+  #     dockerfile: ./build/pgadmin.dockerfile
+  #     args:
+  #       PGADMIN_SERVERS_FILENAME: pgadmin_servers.json
+  #       PGADMIN_BASE_IMAGE: dpage/pgadmin4:latest
+  #   image: click/pgadmin
+  #   container_name: click-pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+  #     PGADMIN_LISTEN_PORT: ${PGADMIN_PORT}
+  #   ports:
+  #     - ${PGADMIN_PORT}:${PGADMIN_PORT}
+  #   depends_on:
+  #     dbserver:
+  #       condition: service_started
+  #   networks:
+  #     - local
 
 networks:
   local:
