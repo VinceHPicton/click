@@ -1,22 +1,4 @@
 services:
-  dbserver:
-    env_file: .env
-    build:
-      dockerfile: ./build/dbserver.dockerfile
-      args:
-        DB_BASE_IMAGE: postgres:latest
-    image: click/dbserver
-    container_name: click-dbserver
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - ${DB_PORT}:${DB_PORT}
-    networks:
-      - local
-
   goapp:
     env_file: .env
     build:
@@ -40,6 +22,24 @@ services:
     depends_on:
       dbserver:
         condition: service_started
+    networks:
+      - local
+  
+  dbserver:
+    env_file: .env
+    build:
+      dockerfile: ./build/dbserver.dockerfile
+      args:
+        DB_BASE_IMAGE: postgres:latest
+    image: click/dbserver
+    container_name: click-dbserver
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
     networks:
       - local
 
