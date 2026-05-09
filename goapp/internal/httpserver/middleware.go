@@ -12,9 +12,17 @@ func (s *Server) middlewareExample(prevHandler http.HandlerFunc) http.HandlerFun
 	}
 }
 
-func (s *Server) corsMiddleware(prevHandler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// CORSMiddleware wraps the entire mux router so every response (including 404/405
+// from gorilla/mux) includes CORS headers. Router.Use only runs after a route match.
+func CORSMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
-		prevHandler(w, r)
-	}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

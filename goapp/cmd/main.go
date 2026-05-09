@@ -48,6 +48,10 @@ func main() {
 	server.Routes()
 
 	appPort := os.Getenv("GOAPP_PORT")
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", appPort), server.Router))
+
+	// log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", appPort), server.Router))
+
+	handler := httpserver.CORSMiddleware(server.Router)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", appPort), handler))
 
 }
