@@ -11,16 +11,14 @@ import (
 func (s *Server) registerAttemptConfirmHandler() http.HandlerFunc {
 
 	type request struct {
-		ID uuid.UUID `json:"id"`
-		OneTimeCode int32 `json:"one_time_code"`
+		ID          uuid.UUID `json:"id"`
+		OneTimeCode int32     `json:"one_time_code"`
 	}
 
 	type response struct {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		queries := sqlc.New(s.DB)
 
 		confirmRegisterAttemptParams := sqlc.RegisterAttemptConfirmParams{}
 
@@ -34,7 +32,7 @@ func (s *Server) registerAttemptConfirmHandler() http.HandlerFunc {
 			return
 		}
 
-		registerAttemptId, err := queries.RegisterAttemptConfirm(r.Context(), confirmRegisterAttemptParams)
+		registerAttemptId, err := s.Queries.RegisterAttemptConfirm(r.Context(), confirmRegisterAttemptParams)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

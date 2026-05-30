@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 
+	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/httpserver"
 
 	"github.com/gorilla/mux"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 		"password=%s dbname=%s sslmode=disable",
 		dbhost, dbport, dbuser, dbpassword, dbname)
 
-	conn, err := sql.Open("postgres", psqlInfo)
+	conn, err := sql.Open("pgx", psqlInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,8 +42,9 @@ func main() {
 	router := mux.NewRouter()
 
 	server := httpserver.Server{
-		DB:     conn,
-		Router: router,
+		DB:      conn,
+		Router:  router,
+		Queries: sqlc.New(conn),
 	}
 
 	server.Routes()
