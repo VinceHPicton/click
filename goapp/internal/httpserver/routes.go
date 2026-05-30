@@ -14,6 +14,7 @@ const (
 	userDeleteRouteName = "userDelete"
 
 	registerAttemptCreateRouteName = "registerAttemptCreate"
+	registerAttemptConfirmRouteName = "registerAttemptConfirm"
 )
 
 func (s *Server) Routes() {
@@ -26,4 +27,5 @@ func (s *Server) Routes() {
 	s.Router.HandleFunc("/users", s.userDeleteHandler()).Methods(http.MethodDelete).Name(userDeleteRouteName)
 
 	s.Router.HandleFunc("/register-attempt", s.registerAttemptCreateHandler()).Methods(http.MethodPost).Name(registerAttemptCreateRouteName)
+	s.Router.HandleFunc("/register-attempt/confirm", s.registerAttemptConfirmHandler()).Methods(http.MethodPost).Name(registerAttemptConfirmRouteName)
 }

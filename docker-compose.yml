@@ -1,5 +1,7 @@
 services:
   goapp:
+    profiles:
+      - goapp
     env_file: .env
     build:
       context: .

@@ -1,24 +1,27 @@
 package httpserver
 
 import (
-	"vincehpicton/click/internal/db"
 	"encoding/json"
 	"net/http"
+	"vincehpicton/click/internal/db"
+
+	"github.com/google/uuid"
 )
 
-type request struct {
+type registerAttemptRequest struct {
 	Mobile string `json:"mobile"`
 }
 
-func (r request) Valid() bool {
+func (r registerAttemptRequest) Valid() bool {
 	if len(r.Mobile) == 0 {
 		return false
 	}
 	return true
 }
 
-type response struct {
-	OneTimeCode string `json:"oneTimeCode"`
+type registerAttemptResponse struct {
+	ID          uuid.UUID `json:"id"`
+	OneTimeCode string    `json:"oneTimeCode"`
 }
 
 func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
@@ -26,11 +29,16 @@ func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
 
 		queries := db.New(s.DB)
 
-		createRegisterAttemptParams := request{}
+		createRegisterAttemptParams := registerAttemptRequest{}
 
 		err := json.NewDecoder(r.Body).Decode(&createRegisterAttemptParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if !createRegisterAttemptParams.Valid() {
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -43,11 +51,6 @@ func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
 		responseBytes, err := json.Marshal(registerAttempt)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if !createRegisterAttemptParams.Valid() {
-			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
