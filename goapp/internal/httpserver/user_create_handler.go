@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"vincehpicton/click/internal/db"
+	"vincehpicton/click/internal/db/sqlc"
 )
 
 func (s *Server) userCreateHandler() http.HandlerFunc {
@@ -12,13 +12,12 @@ func (s *Server) userCreateHandler() http.HandlerFunc {
 	}
 	type response struct {
 		id string
-		
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		queries := db.New(s.DB)
+		queries := sqlc.New(s.DB)
 
-		userCreateParams := db.UserCreateParams{}
+		userCreateParams := sqlc.UserCreateParams{}
 
 		err := json.NewDecoder(r.Body).Decode(&userCreateParams)
 		if err != nil {

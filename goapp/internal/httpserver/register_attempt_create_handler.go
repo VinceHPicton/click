@@ -3,7 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"net/http"
-	"vincehpicton/click/internal/db"
+	"vincehpicton/click/internal/db/sqlc"
 
 	"github.com/google/uuid"
 )
@@ -27,7 +27,7 @@ type registerAttemptResponse struct {
 func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		queries := db.New(s.DB)
+		queries := sqlc.New(s.DB)
 
 		createRegisterAttemptParams := registerAttemptRequest{}
 

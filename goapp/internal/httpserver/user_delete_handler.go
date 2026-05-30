@@ -1,9 +1,9 @@
 package httpserver
 
 import (
-	"vincehpicton/click/internal/db"
 	"encoding/json"
 	"net/http"
+	"vincehpicton/click/internal/db/sqlc"
 
 	"github.com/google/uuid"
 )
@@ -16,7 +16,7 @@ func (s *Server) userDeleteHandler() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		queries := db.New(s.DB)
+		queries := sqlc.New(s.DB)
 
 		deleteUserParams := request{}
 

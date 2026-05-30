@@ -3,7 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"net/http"
-	"vincehpicton/click/internal/db"
+	"vincehpicton/click/internal/db/sqlc"
 
 	"github.com/google/uuid"
 )
@@ -12,7 +12,6 @@ func (s *Server) registerAttemptConfirmHandler() http.HandlerFunc {
 
 	type request struct {
 		ID uuid.UUID `json:"id"`
-		// OneTimeCode string `json:"oneTimeCode"`
 		OneTimeCode int32 `json:"one_time_code"`
 	}
 
@@ -21,9 +20,9 @@ func (s *Server) registerAttemptConfirmHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		queries := db.New(s.DB)
+		queries := sqlc.New(s.DB)
 
-		confirmRegisterAttemptParams := db.RegisterAttemptConfirmParams{}
+		confirmRegisterAttemptParams := sqlc.RegisterAttemptConfirmParams{}
 
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()

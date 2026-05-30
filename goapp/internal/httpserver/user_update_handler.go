@@ -1,9 +1,9 @@
 package httpserver
 
 import (
-	"vincehpicton/click/internal/db"
 	"encoding/json"
 	"net/http"
+	"vincehpicton/click/internal/db/sqlc"
 )
 
 func (s *Server) userUpdateHandler() http.HandlerFunc {
@@ -13,9 +13,9 @@ func (s *Server) userUpdateHandler() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		queries := db.New(s.DB)
+		queries := sqlc.New(s.DB)
 
-		userUpdateParams := db.UserUpdateParams{}
+		userUpdateParams := sqlc.UserUpdateParams{}
 
 		err := json.NewDecoder(r.Body).Decode(&userUpdateParams)
 		if err != nil {
