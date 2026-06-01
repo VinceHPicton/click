@@ -32,7 +32,7 @@ func (s *Server) userDeleteHandler() http.HandlerFunc {
 			return
 		}
 
-		err = queries.UserDelete(r.Context(), uuid)
+		err = queries.DeleteUser(r.Context(), uuid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

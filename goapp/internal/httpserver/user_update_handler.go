@@ -15,7 +15,7 @@ func (s *Server) userUpdateHandler() http.HandlerFunc {
 
 		queries := sqlc.New(s.DB)
 
-		userUpdateParams := sqlc.UserUpdateParams{}
+		userUpdateParams := sqlc.UpdateUserParams{}
 
 		err := json.NewDecoder(r.Body).Decode(&userUpdateParams)
 		if err != nil {
@@ -23,7 +23,7 @@ func (s *Server) userUpdateHandler() http.HandlerFunc {
 			return
 		}
 
-		_, err = queries.UserUpdate(r.Context(), userUpdateParams)
+		_, err = queries.UpdateUser(r.Context(), userUpdateParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return

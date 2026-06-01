@@ -32,7 +32,7 @@ func (s *Server) userGetHandler() http.HandlerFunc {
 			return
 		}
 
-		user, err := queries.UserGet(r.Context(), uuid)
+		user, err := queries.GetUser(r.Context(), uuid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

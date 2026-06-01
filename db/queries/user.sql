@@ -1,4 +1,4 @@
--- name: UserCreate :one
+-- name: CreateUser :one
 
 INSERT INTO app.users (
   name, bio, birth_date, mobile, email, sex, interested_in
@@ -7,14 +7,14 @@ INSERT INTO app.users (
 )
 RETURNING *;
 
--- name: UserDelete :exec
+-- name: DeleteUser :exec
 DELETE FROM app.users WHERE id = $1;
 
--- name: UserGet :one
+-- name: GetUser :one
 SELECT * FROM app.users
 WHERE id = $1 LIMIT 1;
 
--- name: UserUpdate :one
+-- name: UpdateUser :one
 UPDATE app.users
   set
   name = $8,

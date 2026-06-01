@@ -17,7 +17,7 @@ func (s *Server) userCreateHandler() http.HandlerFunc {
 
 		queries := sqlc.New(s.DB)
 
-		userCreateParams := sqlc.UserCreateParams{}
+		userCreateParams := sqlc.CreateUserParams{}
 
 		err := json.NewDecoder(r.Body).Decode(&userCreateParams)
 		if err != nil {
@@ -25,7 +25,7 @@ func (s *Server) userCreateHandler() http.HandlerFunc {
 			return
 		}
 
-		user, err := queries.UserCreate(r.Context(), userCreateParams)
+		user, err := queries.CreateUser(r.Context(), userCreateParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
