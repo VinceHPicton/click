@@ -1,6 +1,6 @@
 -- name: RegisterAttemptCreate :one
 
-INSERT INTO register_attempts (
+INSERT INTO app.register_attempts (
   mobile
 ) VALUES (
   $1
@@ -10,7 +10,7 @@ RETURNING *;
 -- Note: you can use :exec if it doesnt return anything
 -- name: RegisterAttemptConfirm :one
 
-UPDATE register_attempts
+UPDATE app.register_attempts
 SET
     used_at = NOW()
 WHERE id = sqlc.arg(id)

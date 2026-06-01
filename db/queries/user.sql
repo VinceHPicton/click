@@ -1,6 +1,6 @@
 -- name: UserCreate :one
 
-INSERT INTO users (
+INSERT INTO app.users (
   name, bio, birth_date, mobile, email, sex, interested_in
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
@@ -8,14 +8,14 @@ INSERT INTO users (
 RETURNING *;
 
 -- name: UserDelete :exec
-DELETE FROM users WHERE id = $1;
+DELETE FROM app.users WHERE id = $1;
 
 -- name: UserGet :one
-SELECT * FROM users
+SELECT * FROM app.users
 WHERE id = $1 LIMIT 1;
 
 -- name: UserUpdate :one
-UPDATE users
+UPDATE app.users
   set
   name = $8,
   bio = $7,

@@ -1,6 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE register_attempts (
+CREATE SCHEMA IF NOT EXISTS app;
+
+CREATE TABLE app.register_attempts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     mobile VARCHAR(20) NOT NULL,
     one_time_code INTEGER NOT NULL DEFAULT (FLOOR(RANDOM() * 900000 + 100000))::INT,
@@ -8,7 +10,7 @@ CREATE TABLE register_attempts (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users (
+CREATE TABLE app.users (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     bio VARCHAR(1000) NOT NULL,
@@ -23,32 +25,32 @@ CREATE TABLE users (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE matches (
+CREATE TABLE app.matches (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_1_id UUID REFERENCES users,
-    user_2_id UUID REFERENCES users,
+    user_1_id UUID REFERENCES app.users,
+    user_2_id UUID REFERENCES app.users,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE likes (
+CREATE TABLE app.likes (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID REFERENCES users,
-    target_id UUID REFERENCES users,
+    user_id UUID REFERENCES app.users,
+    target_id UUID REFERENCES app.users,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE user_photos (
+CREATE TABLE app.user_photos (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID REFERENCES users,
+    user_id UUID REFERENCES app.users,
     url VARCHAR(4000),
     hash VARCHAR(64) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE messages (
+CREATE TABLE app.messages (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID REFERENCES users,
-    target_id UUID REFERENCES users,
+    user_id UUID REFERENCES app.users,
+    target_id UUID REFERENCES app.users,
     message VARCHAR(4000),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

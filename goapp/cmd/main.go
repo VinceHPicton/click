@@ -33,18 +33,18 @@ func main() {
 		"password=%s dbname=%s sslmode=disable",
 		dbhost, dbport, dbuser, dbpassword, dbname)
 
-	conn, err := sql.Open("pgx", psqlInfo)
+	pool, err := sql.Open("pgx", psqlInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
+	defer pool.Close()
 
 	router := mux.NewRouter()
 
 	server := httpserver.Server{
-		DB:      conn,
+		DB:      pool,
 		Router:  router,
-		Queries: sqlc.New(conn),
+		Queries: sqlc.New(pool),
 	}
 
 	server.Routes()
@@ -53,7 +53,7 @@ func main() {
 
 	// log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", appPort), server.Router))
 
-	handler := httpserver.CORSMiddleware(server.Router)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", appPort), handler))
+	handlers := httpserver.CORSMiddleware(server.Router)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", appPort), handlers))
 
 }
