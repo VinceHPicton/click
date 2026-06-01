@@ -20,12 +20,6 @@ type TestDB struct {
 	Pool      *sql.DB
 }
 
-func (td *TestDB) Teardown(ctx context.Context) {
-	if td.Pool != nil {
-		td.Pool.Close()
-	}
-}
-
 func Setup(ctx context.Context) (*TestDB, error) {
 	const dbname = "testdb"
 	const dbuser = "testuser"
