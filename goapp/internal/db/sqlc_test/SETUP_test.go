@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
 type DatabaseSuite struct {
@@ -36,6 +37,13 @@ func (ts *DatabaseSuite) TearDownSuite() {
 	testcontainers.CleanupContainer(ts.T(), ts.db.Container)
 }
 
-func (ts *DatabaseSuite) TestFalse() {
-	ts.False(false)
+func (ts *DatabaseSuite) SetupTest() {
+	options := []postgres.SnapshotOption{}
+	err := ts.db.Container.Snapshot(ts.ctx, options...)
+	ts.Require().NoError(err)
+}
+
+func (ts *DatabaseSuite) TearDownTest() {
+	err := ts.db.Container.Restore(ts.ctx)
+	ts.Require().NoError(err)
 }

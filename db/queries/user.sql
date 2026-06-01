@@ -26,3 +26,6 @@ UPDATE app.users
   interested_in = $2
 WHERE id = $1
 RETURNING *;
+
+-- name: GetAllUsers :many
+SELECT * FROM app.users;
