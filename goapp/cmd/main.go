@@ -9,6 +9,7 @@ import (
 
 	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/httpserver"
+	"vincehpicton/click/internal/tokens"
 
 	"github.com/gorilla/mux"
 
@@ -41,10 +42,17 @@ func main() {
 
 	router := mux.NewRouter()
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	tokenManager, err := tokens.New(jwtSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	server := httpserver.Server{
 		DB:      pool,
 		Router:  router,
 		Queries: sqlc.New(pool),
+		TokenManager: tokenManager,
 	}
 
 	server.Routes()

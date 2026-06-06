@@ -15,6 +15,10 @@ const (
 
 	registerAttemptCreateRouteName = "registerAttemptCreate"
 	registerAttemptConfirmRouteName = "registerAttemptConfirm"
+
+	loginRouteName = "login"
+	logoutRouteName = "logout"
+	refreshRouteName = "refresh"
 )
 
 func (s *Server) Routes() {
@@ -28,4 +32,8 @@ func (s *Server) Routes() {
 
 	s.Router.HandleFunc("/register-attempt", s.registerAttemptCreateHandler()).Methods(http.MethodPost).Name(registerAttemptCreateRouteName)
 	s.Router.HandleFunc("/register-attempt/confirm", s.registerAttemptConfirmHandler()).Methods(http.MethodPost).Name(registerAttemptConfirmRouteName)
+
+	s.Router.HandleFunc("/auth/login", s.loginHandler()).Methods(http.MethodPost).Name(loginRouteName)
+	s.Router.HandleFunc("/auth/refresh", s.refreshHandler()).Methods(http.MethodPost).Name(refreshRouteName)
+	s.Router.HandleFunc("/auth/logout", s.logoutHandler()).Methods(http.MethodPost).Name(logoutRouteName)
 }

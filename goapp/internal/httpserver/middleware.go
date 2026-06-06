@@ -1,6 +1,11 @@
 package httpserver
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+	"strings"
+	"vincehpicton/click/internal/tokens"
+)
 
 func (s *Server) middlewareExample(prevHandler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -25,4 +30,38 @@ func CORSMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+type AuthContext struct {
+	UserID string
+}
+type contextKey string
+
+const AuthContextKey contextKey = "auth"
+
+func AuthMiddleware(tokenMgr *tokens.Manager) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+
+			if !strings.HasPrefix(authHeader, "Bearer ") {
+				http.Error(w, "invalid auth header prefix; 'Bearer ' is required", http.StatusUnauthorized)
+				return
+			}
+
+			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+			claims, err := tokenMgr.ParseAccessToken(tokenString)
+			if err != nil {
+				http.Error(w, "failed to parse token", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), AuthContextKey, AuthContext{
+				UserID: claims.Subject,
+			})
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }

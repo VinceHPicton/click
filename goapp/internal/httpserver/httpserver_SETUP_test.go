@@ -2,9 +2,12 @@ package httpserver
 
 import (
 	"context"
+	"log"
+	"os"
 	"testing"
 	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/testdb"
+	"vincehpicton/click/internal/tokens"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -13,7 +16,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-type RegisterAttemptConfirmHandlerSuite struct {
+type HandlerSuite struct {
 	suite.Suite
 	db     testdb.TestDB
 	ctx    context.Context
@@ -21,10 +24,10 @@ type RegisterAttemptConfirmHandlerSuite struct {
 }
 
 func TestRegisterAttemptConfirmHandlerSuite(t *testing.T) {
-	suite.Run(t, new(RegisterAttemptConfirmHandlerSuite))
+	suite.Run(t, new(HandlerSuite))
 }
 
-func (ts *RegisterAttemptConfirmHandlerSuite) SetupSuite() {
+func (ts *HandlerSuite) SetupSuite() {
 	ts.ctx = context.Background()
 
 	testDB, err := testdb.Setup(ts.ctx)
@@ -32,28 +35,39 @@ func (ts *RegisterAttemptConfirmHandlerSuite) SetupSuite() {
 
 	router := mux.NewRouter()
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		//TODO Address this in the future, we should be able to set env vars for the test suite, but for now we will just hardcode it
+		jwtSecret = "TEST-SUPER-SECRET"
+	}
+	tokenManager, err := tokens.New(jwtSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ts.db = *testDB
 	ts.server = &Server{
-		DB:      ts.db.Pool,
-		Queries: sqlc.New(ts.db.Pool),
-		Router:  router,
+		DB:           ts.db.Pool,
+		Queries:      sqlc.New(ts.db.Pool),
+		Router:       router,
+		TokenManager: tokenManager,
 	}
 
 	ts.server.Routes()
 }
 
-func (ts *RegisterAttemptConfirmHandlerSuite) TearDownSuite() {
+func (ts *HandlerSuite) TearDownSuite() {
 	ts.db.Pool.Close()
 	testcontainers.CleanupContainer(ts.T(), ts.db.Container)
 }
 
-func (ts *RegisterAttemptConfirmHandlerSuite) SetupTest() {
+func (ts *HandlerSuite) SetupTest() {
 	options := []postgres.SnapshotOption{}
 	err := ts.db.Container.Snapshot(ts.ctx, options...)
 	ts.Require().NoError(err)
 }
 
-func (ts *RegisterAttemptConfirmHandlerSuite) TearDownTest() {
+func (ts *HandlerSuite) TearDownTest() {
 	err := ts.db.Container.Restore(ts.ctx)
 	ts.Require().NoError(err)
 }

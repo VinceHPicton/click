@@ -7,6 +7,10 @@ INSERT INTO app.register_attempts (
 )
 RETURNING *;
 
+-- name: GetRegisterAttempts :many
+
+SELECT * FROM app.register_attempts;
+
 -- Note: you can use :exec if it doesnt return anything
 -- name: RegisterAttemptConfirm :one
 

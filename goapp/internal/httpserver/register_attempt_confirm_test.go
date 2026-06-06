@@ -7,17 +7,18 @@ import (
 	"net/http/httptest"
 )
 
-func (ts *RegisterAttemptConfirmHandlerSuite) TestRegisterAttemptConfirmHandler_Success() {
+func (ts *HandlerSuite) TestRegisterAttemptConfirmHandler_Success() {
 	// Create a register attempt first
 	registerAttempt, err := ts.server.Queries.RegisterAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
 
 	// Make request to handler
 	body := map[string]interface{}{
-		"id":            registerAttempt.ID.String(),
-		"one_time_code": registerAttempt.OneTimeCode,
+		"id":          registerAttempt.ID.String(),
+		"oneTimeCode": registerAttempt.OneTimeCode,
 	}
-	bodyBytes, _ := json.Marshal(body)
+	bodyBytes, err := json.Marshal(body)
+	ts.Require().NoError(err)
 
 	confirmURL, err := ts.server.Router.Get(registerAttemptConfirmRouteName).URL()
 	ts.Require().NoError(err)
@@ -36,7 +37,7 @@ func (ts *RegisterAttemptConfirmHandlerSuite) TestRegisterAttemptConfirmHandler_
 	ts.Equal(http.StatusOK, w.Code)
 }
 
-func (ts *RegisterAttemptConfirmHandlerSuite) TestRegisterAttemptConfirmHandler_BadRequest() {
+func (ts *HandlerSuite) TestRegisterAttemptConfirmHandler_BadRequest() {
 	// Invalid request body
 	body := map[string]interface{}{
 		"id": "invalid-uuid",

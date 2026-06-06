@@ -13,16 +13,25 @@ CREATE TABLE app.register_attempts (
 CREATE TABLE app.users (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(50),
-    bio VARCHAR(1000),
+    bio VARCHAR(10000),
     birth_date DATE,
     last_location_long DECIMAL(9,6),
     last_location_lat DECIMAL(9,6),
     mobile VARCHAR(20) NOT NULL,
     last_active TIMESTAMPTZ,
-    email VARCHAR(100),
+    email VARCHAR(255),
     sex SMALLINT,
     interested_in SMALLINT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE app.refresh_tokens (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES app.users NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ
 );
 
 CREATE TABLE app.matches (
