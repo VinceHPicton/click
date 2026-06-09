@@ -7,45 +7,45 @@ import (
 	"github.com/google/uuid"
 )
 
-type registerAttemptRequest struct {
+type authAttemptRequest struct {
 	Mobile string `json:"mobile"`
 }
 
-func (r registerAttemptRequest) Valid() bool {
+func (r authAttemptRequest) Valid() bool {
 	if len(r.Mobile) == 0 {
 		return false
 	}
 	return true
 }
 
-type registerAttemptResponse struct {
+type authAttemptResponse struct {
 	ID          uuid.UUID `json:"id"`
 	OneTimeCode string    `json:"oneTimeCode"`
 }
 
-func (s *Server) registerAttemptCreateHandler() http.HandlerFunc {
+func (s *Server) authAttemptCreateHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		createRegisterAttemptParams := registerAttemptRequest{}
+		createAuthAttemptParams := authAttemptRequest{}
 
-		err := json.NewDecoder(r.Body).Decode(&createRegisterAttemptParams)
+		err := json.NewDecoder(r.Body).Decode(&createAuthAttemptParams)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		if !createRegisterAttemptParams.Valid() {
+		if !createAuthAttemptParams.Valid() {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		registerAttempt, err := s.Queries.RegisterAttemptCreate(r.Context(), createRegisterAttemptParams.Mobile)
+		authAttempt, err := s.Queries.AuthAttemptCreate(r.Context(), createAuthAttemptParams.Mobile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		responseBytes, err := json.Marshal(registerAttempt)
+		responseBytes, err := json.Marshal(authAttempt)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

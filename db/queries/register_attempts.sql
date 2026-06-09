@@ -1,21 +1,21 @@
--- name: RegisterAttemptCreate :one
+-- name: AuthAttemptCreate :one
 
-INSERT INTO app.register_attempts (
+INSERT INTO app.auth_attempts (
   mobile
 ) VALUES (
   $1
 )
 RETURNING *;
 
--- name: GetRegisterAttempts :many
+-- name: GetAuthAttempts :many
 
-SELECT * FROM app.register_attempts;
+SELECT * FROM app.auth_attempts;
 
 -- Note: you can use :exec if it doesnt return anything
--- name: RegisterAttemptConfirm :one
+-- name: AuthAttemptConfirm :one
 
 WITH consumed_attempt AS (
-    UPDATE app.register_attempts AS ra
+    UPDATE app.auth_attempts AS ra
     SET used_at = NOW()
     WHERE ra.id = sqlc.arg(id)
       AND ra.one_time_code = sqlc.arg(one_time_code)
@@ -32,4 +32,4 @@ new_user AS (
 SELECT id AS user_id
 FROM new_user;
 
--- name: GetRegisterAttempt :one
+-- name: GetAuthAttempt :one

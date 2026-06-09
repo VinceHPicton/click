@@ -23,7 +23,7 @@ type HandlerSuite struct {
 	server *Server
 }
 
-func TestRegisterAttemptConfirmHandlerSuite(t *testing.T) {
+func TestAuthAttemptConfirmHandlerSuite(t *testing.T) {
 	suite.Run(t, new(HandlerSuite))
 }
 

@@ -2,30 +2,30 @@ package sqlc_test
 
 import "vincehpicton/click/internal/db/sqlc"
 
-func (ts *DatabaseSuite) TestRegisterAttemptCreate() {
-	registerAttempt, err := ts.queries.RegisterAttemptCreate(ts.ctx, "+447840195455")
+func (ts *DatabaseSuite) TestAuthAttemptCreate() {
+	authAttempt, err := ts.queries.AuthAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
-	ts.NotEmpty(registerAttempt)
+	ts.NotEmpty(authAttempt)
 
-	registerAttempts, err := ts.queries.GetRegisterAttempts(ts.ctx)
+	authAttempts, err := ts.queries.GetAuthAttempts(ts.ctx)
 	ts.Require().NoError(err)
-	ts.Require().Equal(1, len(registerAttempts))
-	ts.Equal(registerAttempt.ID, registerAttempts[0].ID)
+	ts.Require().Equal(1, len(authAttempts))
+	ts.Equal(authAttempt.ID, authAttempts[0].ID)
 }
 
-func (ts *DatabaseSuite) TestRegisterAttemptConfirm() {
-	registerAttempt, err := ts.queries.RegisterAttemptCreate(ts.ctx, "+447840195455")
+func (ts *DatabaseSuite) TestAuthAttemptConfirm() {
+	authAttempt, err := ts.queries.AuthAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
 
-	RegisterAttemptConfirmParams := sqlc.RegisterAttemptConfirmParams{
-		ID:          registerAttempt.ID,
-		OneTimeCode: registerAttempt.OneTimeCode,
+	AuthAttemptConfirmParams := sqlc.AuthAttemptConfirmParams{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
 	}
 
-	newUserID, err := ts.queries.RegisterAttemptConfirm(ts.ctx, RegisterAttemptConfirmParams)
+	newUserID, err := ts.queries.AuthAttemptConfirm(ts.ctx, AuthAttemptConfirmParams)
 	ts.Require().NoError(err)
 	ts.NotEmpty(newUserID)
-	ts.NotEqual(newUserID, registerAttempt.ID)
+	ts.NotEqual(newUserID, authAttempt.ID)
 
 	users, err := ts.queries.GetAllUsers(ts.ctx)
 	ts.Require().NoError(err)
@@ -33,15 +33,15 @@ func (ts *DatabaseSuite) TestRegisterAttemptConfirm() {
 	ts.NotEmpty(users)
 }
 
-func (ts *DatabaseSuite) TestRegisterAttemptConfirm_Fail() {
-	registerAttempt, err := ts.queries.RegisterAttemptCreate(ts.ctx, "+447840195455")
+func (ts *DatabaseSuite) TestAuthAttemptConfirm_Fail() {
+	authAttempt, err := ts.queries.AuthAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
 
-	RegisterAttemptConfirmParams := sqlc.RegisterAttemptConfirmParams{
-		OneTimeCode: registerAttempt.OneTimeCode,
+	AuthAttemptConfirmParams := sqlc.AuthAttemptConfirmParams{
+		OneTimeCode: authAttempt.OneTimeCode,
 	}
 
-	_, err = ts.queries.RegisterAttemptConfirm(ts.ctx, RegisterAttemptConfirmParams)
+	_, err = ts.queries.AuthAttemptConfirm(ts.ctx, AuthAttemptConfirmParams)
 	ts.Require().Error(err)
 
 	users, err := ts.queries.GetAllUsers(ts.ctx)

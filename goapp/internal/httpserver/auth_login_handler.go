@@ -2,7 +2,7 @@ package httpserver
 
 import "net/http"
 
-func (s *Server) logoutHandler() http.HandlerFunc {
+func (s *Server) loginHandler() http.HandlerFunc {
 	type request struct {
 	}
 	type response struct {
