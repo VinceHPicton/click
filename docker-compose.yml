@@ -12,7 +12,7 @@ services:
     container_name: click-goapp
     environment:
       APP_NAME: goapp
-      DB_ADDR: dbserver
+      DB_ADDR: db
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -22,19 +22,19 @@ services:
       - ${GOAPP_PORT}:${GOAPP_PORT}
     command: /usr/bin/goapp
     depends_on:
-      dbserver:
+      db:
         condition: service_started
     networks:
       - local
   
-  dbserver:
+  db:
     env_file: .env
     build:
-      dockerfile: ./build/dbserver.dockerfile
+      dockerfile: ./build/db.dockerfile
       args:
         DB_BASE_IMAGE: postgres:latest
-    image: click/dbserver
-    container_name: click-dbserver
+    image: click/db
+    container_name: click-db
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -61,7 +61,7 @@ services:
   #   ports:
   #     - ${PGADMIN_PORT}:${PGADMIN_PORT}
   #   depends_on:
-  #     dbserver:
+  #     db:
   #       condition: service_started
   #   networks:
   #     - local

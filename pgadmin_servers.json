@@ -6,7 +6,7 @@
             "Port": 5432,
             "Username": "pguser",
             "Password": "pgpass",
-            "Host": "dbserver",
+            "Host": "db",
             "SSLMode": "prefer",
             "MaintenanceDB": "postgres"
         }

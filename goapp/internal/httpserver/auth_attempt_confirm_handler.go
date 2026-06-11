@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Server) authAttemptConfirmHandler() http.HandlerFunc {
+func (s *Server) authAttemptCreateUserHandler() http.HandlerFunc {
 
 	type request struct {
 		ID          uuid.UUID `json:"id"`
@@ -36,12 +36,12 @@ func (s *Server) authAttemptConfirmHandler() http.HandlerFunc {
 			return
 		}
 
-		confirmAuthAttemptParams := sqlc.AuthAttemptConfirmParams{
+		confirmAuthAttemptParams := sqlc.AuthAttemptCreateUserParams{
 			ID:          req.ID,
 			OneTimeCode: req.OneTimeCode,
 		}
 
-		newUserID, err := s.Queries.AuthAttemptConfirm(r.Context(), confirmAuthAttemptParams)
+		newUserID, err := s.Queries.AuthAttemptCreateUser(r.Context(), confirmAuthAttemptParams)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

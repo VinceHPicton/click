@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 )
 
-func (ts *HandlerSuite) TestAuthAttemptConfirmHandler_Success() {
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_Success() {
 	// Create an auth attempt first
 	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
@@ -20,7 +20,7 @@ func (ts *HandlerSuite) TestAuthAttemptConfirmHandler_Success() {
 	bodyBytes, err := json.Marshal(body)
 	ts.Require().NoError(err)
 
-	confirmURL, err := ts.server.Router.Get(authAttemptConfirmRouteName).URL()
+	confirmURL, err := ts.server.Router.Get(authAttemptCreateUserRouteName).URL()
 	ts.Require().NoError(err)
 
 	req := httptest.NewRequest(
@@ -31,20 +31,20 @@ func (ts *HandlerSuite) TestAuthAttemptConfirmHandler_Success() {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler := ts.server.authAttemptConfirmHandler()
+	handler := ts.server.authAttemptCreateUserHandler()
 	handler(w, req)
 
 	ts.Equal(http.StatusOK, w.Code)
 }
 
-func (ts *HandlerSuite) TestAuthAttemptConfirmHandler_BadRequest() {
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_BadRequest() {
 	// Invalid request body
 	body := map[string]interface{}{
 		"id": "invalid-uuid",
 	}
 	bodyBytes, _ := json.Marshal(body)
 
-	confirmURL, err := ts.server.Router.Get(authAttemptConfirmRouteName).URL()
+	confirmURL, err := ts.server.Router.Get(authAttemptCreateUserRouteName).URL()
 	ts.Require().NoError(err)
 
 	req := httptest.NewRequest(
@@ -55,7 +55,7 @@ func (ts *HandlerSuite) TestAuthAttemptConfirmHandler_BadRequest() {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler := ts.server.authAttemptConfirmHandler()
+	handler := ts.server.authAttemptCreateUserHandler()
 	handler(w, req)
 
 	ts.Equal(http.StatusBadRequest, w.Code)

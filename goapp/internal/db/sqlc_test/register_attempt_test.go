@@ -13,16 +13,16 @@ func (ts *DatabaseSuite) TestAuthAttemptCreate() {
 	ts.Equal(authAttempt.ID, authAttempts[0].ID)
 }
 
-func (ts *DatabaseSuite) TestAuthAttemptConfirm() {
+func (ts *DatabaseSuite) TestAuthAttemptCreateUser() {
 	authAttempt, err := ts.queries.AuthAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
 
-	AuthAttemptConfirmParams := sqlc.AuthAttemptConfirmParams{
+	AuthAttemptCreateUserParams := sqlc.AuthAttemptCreateUserParams{
 		ID:          authAttempt.ID,
 		OneTimeCode: authAttempt.OneTimeCode,
 	}
 
-	newUserID, err := ts.queries.AuthAttemptConfirm(ts.ctx, AuthAttemptConfirmParams)
+	newUserID, err := ts.queries.AuthAttemptCreateUser(ts.ctx, AuthAttemptCreateUserParams)
 	ts.Require().NoError(err)
 	ts.NotEmpty(newUserID)
 	ts.NotEqual(newUserID, authAttempt.ID)
@@ -33,15 +33,15 @@ func (ts *DatabaseSuite) TestAuthAttemptConfirm() {
 	ts.NotEmpty(users)
 }
 
-func (ts *DatabaseSuite) TestAuthAttemptConfirm_Fail() {
+func (ts *DatabaseSuite) TestAuthAttemptCreateUser_Fail() {
 	authAttempt, err := ts.queries.AuthAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
 
-	AuthAttemptConfirmParams := sqlc.AuthAttemptConfirmParams{
+	AuthAttemptCreateUserParams := sqlc.AuthAttemptCreateUserParams{
 		OneTimeCode: authAttempt.OneTimeCode,
 	}
 
-	_, err = ts.queries.AuthAttemptConfirm(ts.ctx, AuthAttemptConfirmParams)
+	_, err = ts.queries.AuthAttemptCreateUser(ts.ctx, AuthAttemptCreateUserParams)
 	ts.Require().Error(err)
 
 	users, err := ts.queries.GetAllUsers(ts.ctx)

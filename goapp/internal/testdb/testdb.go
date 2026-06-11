@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	postgresDBImage = "click/dbserver"
+	postgresDBImage = "click/db"
 	SQLDriver       = "pgx"
 )
 

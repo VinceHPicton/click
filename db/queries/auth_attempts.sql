@@ -12,7 +12,7 @@ RETURNING *;
 SELECT * FROM app.auth_attempts;
 
 -- Note: you can use :exec if it doesnt return anything
--- name: AuthAttemptConfirm :one
+-- name: AuthAttemptCreateUser :one
 
 WITH consumed_attempt AS (
     UPDATE app.auth_attempts AS ra
