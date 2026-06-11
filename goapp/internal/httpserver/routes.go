@@ -29,8 +29,8 @@ func (s *Server) Routes() {
 	s.Router.HandleFunc("/users", s.userUpdateHandler()).Methods(http.MethodPut).Name(userUpdateRouteName)
 	s.Router.HandleFunc("/users", s.userDeleteHandler()).Methods(http.MethodDelete).Name(userDeleteRouteName)
 
-	s.Router.HandleFunc("/register-attempt", s.authAttemptCreateHandler()).Methods(http.MethodPost).Name(authAttemptCreateRouteName)
-	s.Router.HandleFunc("/register-attempt/confirm", s.authAttemptConfirmHandler()).Methods(http.MethodPost).Name(authAttemptConfirmRouteName)
+	s.Router.HandleFunc("/auth-attempt", s.authAttemptCreateHandler()).Methods(http.MethodPost).Name(authAttemptCreateRouteName)
+	s.Router.HandleFunc("/auth-attempt/confirm", s.authAttemptConfirmHandler()).Methods(http.MethodPost).Name(authAttemptConfirmRouteName)
 
 	s.Router.HandleFunc("/auth/refresh", s.refreshHandler()).Methods(http.MethodPost).Name(refreshRouteName)
 	s.Router.HandleFunc("/auth/logout", s.logoutHandler()).Methods(http.MethodPost).Name(logoutRouteName)

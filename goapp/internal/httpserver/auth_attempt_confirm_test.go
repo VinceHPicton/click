@@ -8,7 +8,7 @@ import (
 )
 
 func (ts *HandlerSuite) TestAuthAttemptConfirmHandler_Success() {
-	// Create a register attempt first
+	// Create an auth attempt first
 	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
 	ts.Require().NoError(err)
 
