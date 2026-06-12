@@ -15,6 +15,7 @@ SELECT * FROM app.auth_attempts;
 -- name: AuthAttemptCreateUser :one
 
 WITH consumed_attempt AS (
+  
     UPDATE app.auth_attempts AS ra
     SET used_at = NOW()
     WHERE ra.id = sqlc.arg(id)

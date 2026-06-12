@@ -15,7 +15,8 @@ const (
 
 	authAttemptCreateRouteName     = "authAttemptCreate"
 	authAttemptCreateUserRouteName = "authAttemptCreateUser"
-
+	authAttemptLoginRouteName      = "authAttemptLogin"
+	
 	logoutRouteName  = "logout"
 	refreshRouteName = "refresh"
 )
@@ -31,6 +32,7 @@ func (s *Server) Routes() {
 
 	s.Router.HandleFunc("/auth-attempt", s.authAttemptCreateHandler()).Methods(http.MethodPost).Name(authAttemptCreateRouteName)
 	s.Router.HandleFunc("/auth-attempt/create-user", s.authAttemptCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptCreateUserRouteName)
+	s.Router.HandleFunc("/auth-attempt/login", s.authAttemptLoginHandler()).Methods(http.MethodPost).Name(authAttemptLoginRouteName)
 
 	s.Router.HandleFunc("/auth/refresh", s.refreshHandler()).Methods(http.MethodPost).Name(refreshRouteName)
 	s.Router.HandleFunc("/auth/logout", s.logoutHandler()).Methods(http.MethodPost).Name(logoutRouteName)

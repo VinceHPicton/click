@@ -22,8 +22,13 @@ CREATE TABLE app.users (
     email VARCHAR(255),
     sex SMALLINT,
     interested_in SMALLINT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
+
+CREATE UNIQUE INDEX users_phone_unique_active
+ON app.users(mobile)
+WHERE deleted_at IS NULL;
 
 CREATE TABLE app.refresh_tokens (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
