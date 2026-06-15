@@ -43,7 +43,7 @@ func main() {
 	router := mux.NewRouter()
 
 	jwtSecret := os.Getenv("JWT_SECRET")
-	tokenManager, err := tokens.New(jwtSecret)
+	tokenMgr, err := tokens.New(jwtSecret)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func main() {
 		DB:      pool,
 		Router:  router,
 		Queries: sqlc.New(pool),
-		TokenManager: tokenManager,
+		TokenManager: tokenMgr,
 	}
 
 	server.Routes()
