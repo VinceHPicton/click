@@ -7,17 +7,18 @@ import (
 	"vincehpicton/click/internal/tokens"
 )
 
+type refreshRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}
+type refreshResponse struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
 func (s *Server) refreshHandler() http.HandlerFunc {
-	type request struct {
-		RefreshToken string `json:"refreshToken"`
-	}
-	type response struct {
-		AccessToken  string `json:"accessToken"`
-		RefreshToken string `json:"refreshToken"`
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		req := request{}
+		req := refreshRequest{}
 
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
@@ -44,6 +45,12 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 			return
 		}
 
+		if user.BannedAt.Valid {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("User is banned"))
+			return
+		}
+
 		newRefreshToken := tokens.GenerateRefreshToken()
 		p := sqlc.RotateRefreshTokenParams{
 			UserID:       user.ID,
@@ -65,7 +72,7 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 			return
 		}
 
-		resp := response{
+		resp := refreshResponse{
 			AccessToken:  accessToken,
 			RefreshToken: newRefreshToken,
 		}

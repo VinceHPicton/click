@@ -22,6 +22,7 @@ CREATE TABLE app.users (
     email VARCHAR(255),
     sex SMALLINT,
     interested_in SMALLINT,
+    banned_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
 );

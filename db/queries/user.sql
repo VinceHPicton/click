@@ -19,6 +19,11 @@ WHERE id = $1;
 SELECT * FROM app.users
 WHERE id = $1 LIMIT 1;
 
+-- name: BanUser :exec
+UPDATE app.users
+  set banned_at = NOW()
+WHERE id = $1;
+
 -- name: UpdateUser :one
 UPDATE app.users
   set

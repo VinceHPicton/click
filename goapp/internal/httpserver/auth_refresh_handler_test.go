@@ -24,10 +24,10 @@ func (ts *HandlerSuite) TestRefreshToken() {
 	_, err = ts.server.Queries.CreateRefreshToken(ts.ctx, params)
 	ts.Require().NoError(err)
 
-	body := map[string]interface{}{
+	reqBody := map[string]interface{}{
 		"refreshToken": refreshToken,
 	}
-	bodyBytes, err := json.Marshal(body)
+	bodyBytes, err := json.Marshal(reqBody)
 	ts.Require().NoError(err)
 
 	refreshURL, err := ts.server.Router.Get(refreshRouteName).URL()
@@ -45,4 +45,51 @@ func (ts *HandlerSuite) TestRefreshToken() {
 	handler(w, req)
 
 	ts.Equal(http.StatusOK, w.Code)
+
+	resp := refreshResponse{}
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	ts.Require().NoError(err)
+
+	ts.Require().NotEmpty(resp.AccessToken)
+	ts.Require().NotEmpty(resp.RefreshToken)
+}
+
+func (ts *HandlerSuite) TestRefreshToken_BannedUser() {
+	var err error
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.BanUser(ts.ctx, user.ID)
+	ts.Require().NoError(err)
+
+	refreshToken := tokens.GenerateRefreshToken()
+	refreshTokenHash := tokens.HashRefreshToken(refreshToken)
+	params := sqlc.CreateRefreshTokenParams{
+		UserID:    user.ID,
+		TokenHash: refreshTokenHash,
+	}
+	_, err = ts.server.Queries.CreateRefreshToken(ts.ctx, params)
+	ts.Require().NoError(err)
+
+	reqBody := map[string]interface{}{
+		"refreshToken": refreshToken,
+	}
+	bodyBytes, err := json.Marshal(reqBody)
+	ts.Require().NoError(err)
+
+	refreshURL, err := ts.server.Router.Get(refreshRouteName).URL()
+	ts.Require().NoError(err)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		refreshURL.String(),
+		bytes.NewReader(bodyBytes),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler := ts.server.refreshHandler()
+	handler(w, req)
+
+	ts.Equal(http.StatusUnauthorized, w.Code)
 }
