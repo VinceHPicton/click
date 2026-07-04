@@ -51,6 +51,12 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 			return
 		}
 
+		if user.DeletedAt.Valid {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("User is deleted"))
+			return
+		}
+
 		newRefreshToken := tokens.GenerateRefreshToken()
 		p := sqlc.RotateRefreshTokenParams{
 			UserID:       user.ID,

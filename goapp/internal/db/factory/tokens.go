@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func FakeRefreshToken(ctx context.Context, q *sqlc.Queries, userID uuid.UUID) (sqlc.AppRefreshToken, error) {
+func FakeRefreshToken(ctx context.Context, q *sqlc.Queries, userID uuid.UUID) (unhashedToken string, dbToken sqlc.AppRefreshToken, err error) {
 	refreshToken := tokens.GenerateRefreshToken()
 	refreshTokenHash := tokens.HashRefreshToken(refreshToken)
 
@@ -17,5 +17,7 @@ func FakeRefreshToken(ctx context.Context, q *sqlc.Queries, userID uuid.UUID) (s
 		TokenHash: refreshTokenHash,
 	}
 
-	return q.CreateRefreshToken(ctx, p)
+	token, err := q.CreateRefreshToken(ctx, p)
+
+	return refreshToken, token, err
 }

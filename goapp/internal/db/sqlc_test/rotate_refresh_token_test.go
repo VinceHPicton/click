@@ -14,7 +14,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken() {
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
 
-	oldToken, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
+	_, oldToken, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
 	newRefreshTokenhash := tokens.HashRefreshToken(tokens.GenerateRefreshToken())
@@ -46,7 +46,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_SucceedsIfExpiredInFuture() {
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
 
-	token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
+	_, token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
 	err = expireTokenTomorrow(ts.db.Pool, token.ID)
@@ -80,7 +80,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_FailsWithWrongUserID() {
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
 
-	token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
+	_, token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
 	invalidUserID := uuid.New()
@@ -107,7 +107,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_FailsIfRevoked() {
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
 
-	token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
+	_, token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
 	err = revokeToken(ts.db.Pool, token.ID)
@@ -132,7 +132,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_FailsIfExpiredInPast() {
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
 
-	token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
+	_, token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
 	err = expireTokenYesterday(ts.db.Pool, token.ID)

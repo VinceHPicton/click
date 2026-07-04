@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"vincehpicton/click/internal/db/factory"
-	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/tokens"
 )
 
@@ -15,34 +14,10 @@ func (ts *HandlerSuite) TestRefreshToken() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	refreshToken := tokens.GenerateRefreshToken()
-	refreshTokenHash := tokens.HashRefreshToken(refreshToken)
-	params := sqlc.CreateRefreshTokenParams{
-		UserID:    user.ID,
-		TokenHash: refreshTokenHash,
-	}
-	_, err = ts.server.Queries.CreateRefreshToken(ts.ctx, params)
+	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
 	ts.Require().NoError(err)
 
-	reqBody := map[string]interface{}{
-		"refreshToken": refreshToken,
-	}
-	bodyBytes, err := json.Marshal(reqBody)
-	ts.Require().NoError(err)
-
-	refreshURL, err := ts.server.Router.Get(refreshRouteName).URL()
-	ts.Require().NoError(err)
-
-	req := httptest.NewRequest(
-		http.MethodPost,
-		refreshURL.String(),
-		bytes.NewReader(bodyBytes),
-	)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	handler := ts.server.refreshHandler()
-	handler(w, req)
+	w := ts.refresh(refreshToken)
 
 	ts.Equal(http.StatusOK, w.Code)
 
@@ -62,34 +37,68 @@ func (ts *HandlerSuite) TestRefreshToken_BannedUser() {
 	err = ts.server.Queries.BanUser(ts.ctx, user.ID)
 	ts.Require().NoError(err)
 
-	refreshToken := tokens.GenerateRefreshToken()
-	refreshTokenHash := tokens.HashRefreshToken(refreshToken)
-	params := sqlc.CreateRefreshTokenParams{
-		UserID:    user.ID,
-		TokenHash: refreshTokenHash,
-	}
-	_, err = ts.server.Queries.CreateRefreshToken(ts.ctx, params)
+	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
 	ts.Require().NoError(err)
 
-	reqBody := map[string]interface{}{
-		"refreshToken": refreshToken,
-	}
-	bodyBytes, err := json.Marshal(reqBody)
+	w := ts.refresh(refreshToken)
+
+	ts.Equal(http.StatusUnauthorized, w.Code)
+}
+
+func (ts *HandlerSuite) TestRefreshToken_SoftDeletedUser() {
+	var err error
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	refreshURL, err := ts.server.Router.Get(refreshRouteName).URL()
+	err = ts.server.Queries.SoftDeleteUser(ts.ctx, user.ID)
 	ts.Require().NoError(err)
 
-	req := httptest.NewRequest(
-		http.MethodPost,
-		refreshURL.String(),
-		bytes.NewReader(bodyBytes),
-	)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
+	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	ts.Require().NoError(err)
+
+	w := ts.refresh(refreshToken)
+
+	ts.Equal(http.StatusBadRequest, w.Code)
+
+	tokenRows, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(tokenRows))
+}
+
+func (ts *HandlerSuite) TestRefreshToken_TokenDoesntExist() {
+	var err error
+	_, err = factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	w := ts.refresh(tokens.GenerateRefreshToken())
+
+	ts.Equal(http.StatusBadRequest, w.Code)
+
+	tokenRows, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(0, len(tokenRows))
+}
+
+func (ts *HandlerSuite) refresh(refreshToken string) *httptest.ResponseRecorder {
+    body, err := json.Marshal(refreshRequest{
+        RefreshToken: refreshToken,
+    })
+    ts.Require().NoError(err)
+
+    url, err := ts.server.Router.Get(refreshRouteName).URL()
+    ts.Require().NoError(err)
+
+    req := httptest.NewRequest(
+        http.MethodPost,
+        url.String(),
+        bytes.NewReader(body),
+    )
+    req.Header.Set("Content-Type", "application/json")
+
+    w := httptest.NewRecorder()
 
 	handler := ts.server.refreshHandler()
 	handler(w, req)
 
-	ts.Equal(http.StatusUnauthorized, w.Code)
+    return w
 }
