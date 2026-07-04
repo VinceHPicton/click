@@ -21,7 +21,7 @@ func (ts *HandlerSuite) TestRefreshToken() {
 		UserID:    user.ID,
 		TokenHash: refreshTokenHash,
 	}
-	err = ts.server.Queries.CreateRefreshToken(ts.ctx, params)
+	_, err = ts.server.Queries.CreateRefreshToken(ts.ctx, params)
 	ts.Require().NoError(err)
 
 	body := map[string]interface{}{

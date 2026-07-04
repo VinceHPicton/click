@@ -30,7 +30,7 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 		}
 
 		hash := tokens.HashRefreshToken(req.RefreshToken)
-		token, err := s.Queries.GetTokenByHash(r.Context(), hash)
+		token, err := s.Queries.GetValidTokenByHash(r.Context(), hash)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Invalid refresh token"))

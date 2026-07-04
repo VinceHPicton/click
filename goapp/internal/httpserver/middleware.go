@@ -39,17 +39,32 @@ type contextKey string
 
 const AuthContextKey contextKey = "auth"
 
+func AuthFromContext(ctx context.Context) (AuthContext, bool) {
+	v, ok := ctx.Value(AuthContextKey).(AuthContext)
+	return v, ok
+}
+
 func AuthMiddleware(tokenMgr *tokens.Manager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
-
-			if !strings.HasPrefix(authHeader, "Bearer ") {
-				http.Error(w, "invalid auth header prefix; 'Bearer ' is required", http.StatusUnauthorized)
+			if authHeader == "" {
+				http.Error(w, "missing authorization header", http.StatusUnauthorized)
 				return
 			}
 
-			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) != 2 {
+				http.Error(w, "invalid authorization scheme", http.StatusUnauthorized)
+				return
+			}
+			bearerStr := parts[0]
+			tokenString := parts[1]
+
+			if bearerStr != "Bearer" && bearerStr != "bearer" {
+				http.Error(w, "invalid auth header prefix; 'Bearer ' or 'bearer' is required", http.StatusUnauthorized)
+				return
+			}
 
 			claims, err := tokenMgr.ParseAccessToken(tokenString)
 			if err != nil {

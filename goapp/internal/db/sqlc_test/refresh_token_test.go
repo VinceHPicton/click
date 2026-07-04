@@ -19,10 +19,10 @@ func (ts *DatabaseSuite) TestCreateRefreshToken() {
 		TokenHash: refreshTokenHash,
 	}
 
-	err = ts.queries.CreateRefreshToken(ts.ctx, p)
+	_, err = ts.queries.CreateRefreshToken(ts.ctx, p)
 	ts.Require().NoError(err)
 
-	tokenDBItem, err := ts.queries.GetTokenByHash(ts.ctx, refreshTokenHash)
+	tokenDBItem, err := ts.queries.GetValidTokenByHash(ts.ctx, refreshTokenHash)
 	ts.Require().NoError(err)
 	ts.Require().Equal(user.ID, tokenDBItem.UserID)
 

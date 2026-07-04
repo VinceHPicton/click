@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"database/sql"
+	"net/http"
 	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/tokens"
 
@@ -15,5 +16,6 @@ type Server struct {
 	TokenManager *tokens.Manager
 }
 
-func init() {
+func (s *Server) authMiddleware() func(http.Handler) http.Handler {
+	return AuthMiddleware(s.TokenManager)
 }

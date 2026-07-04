@@ -7,8 +7,13 @@ INSERT INTO app.users (
 )
 RETURNING *;
 
--- name: DeleteUser :exec
+-- name: HardDeleteUser :exec
 DELETE FROM app.users WHERE id = $1;
+
+-- name: SoftDeleteUser :exec
+UPDATE app.users
+  set deleted_at = NOW()
+WHERE id = $1;
 
 -- name: GetUser :one
 SELECT * FROM app.users

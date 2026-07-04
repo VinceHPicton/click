@@ -60,7 +60,7 @@ func (s *Server) authAttemptCreateUserHandler() http.HandlerFunc {
 
 		refreshToken := tokens.GenerateRefreshToken()
 
-		err = s.Queries.CreateRefreshToken(r.Context(), sqlc.CreateRefreshTokenParams{
+		_, err = s.Queries.CreateRefreshToken(r.Context(), sqlc.CreateRefreshTokenParams{
 			UserID:    newUserID,
 			TokenHash: tokens.HashRefreshToken(refreshToken),
 		})

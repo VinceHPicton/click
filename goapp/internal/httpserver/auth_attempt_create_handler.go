@@ -29,6 +29,7 @@ func (s *Server) authAttemptCreateHandler() http.HandlerFunc {
 		createAuthAttemptParams := authAttemptRequest{}
 
 		err := json.NewDecoder(r.Body).Decode(&createAuthAttemptParams)
+		
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
