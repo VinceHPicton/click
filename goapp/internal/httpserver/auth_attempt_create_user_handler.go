@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Server) authAttemptCreateUserHandler() http.HandlerFunc {
+func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 
 	type request struct {
 		ID          uuid.UUID `json:"id"`

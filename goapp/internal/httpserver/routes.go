@@ -13,10 +13,12 @@ const (
 	userUpdateRouteName = "userUpdate"
 	userDeleteRouteName = "userDelete"
 
-	authAttemptCreateRouteName     = "authAttemptCreate"
-	authAttemptCreateUserRouteName = "authAttemptCreateUser"
-	authAttemptLoginRouteName      = "authAttemptLogin"
-	
+	authAttemptStartLoginRouteName      = "authAttemptStartLogin"
+	authAttemptStartCreateUserRouteName = "authAttemptStartCreateUser"
+
+	authAttemptConfirmLoginRouteName      = "authAttemptConfirmLogin"
+	authAttemptConfirmCreateUserRouteName = "authAttemptConfirmCreateUser"
+
 	logoutRouteName  = "logout"
 	refreshRouteName = "refresh"
 )
@@ -25,9 +27,10 @@ func (s *Server) Routes() {
 
 	s.Router.HandleFunc("/dbping", s.middlewareExample(s.handleDBping())).Name(dbPingRouteName)
 
-	s.Router.HandleFunc("/auth-attempt", s.authAttemptCreateHandler()).Methods(http.MethodPost).Name(authAttemptCreateRouteName)
-	s.Router.HandleFunc("/auth-attempt/create-user", s.authAttemptCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptCreateUserRouteName)
-	s.Router.HandleFunc("/auth-attempt/login", s.authAttemptLoginHandler()).Methods(http.MethodPost).Name(authAttemptLoginRouteName)
+	s.Router.HandleFunc("/auth-attempt/start/login", s.authAttemptStartLoginHandler()).Methods(http.MethodPost).Name(authAttemptStartLoginRouteName)
+	s.Router.HandleFunc("/auth-attempt/start/create-user", s.authAttemptStartCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptStartCreateUserRouteName)
+	s.Router.HandleFunc("/auth-attempt/confirm/login", s.authAttemptConfirmLoginHandler()).Methods(http.MethodPost).Name(authAttemptConfirmLoginRouteName)
+	s.Router.HandleFunc("/auth-attempt/confirm/create-user", s.authAttemptConfirmCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptConfirmCreateUserRouteName)
 
 	s.Router.HandleFunc("/auth/refresh", s.refreshHandler()).Methods(http.MethodPost).Name(refreshRouteName)
 

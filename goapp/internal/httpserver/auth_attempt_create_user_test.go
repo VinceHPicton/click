@@ -21,7 +21,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_Success() {
 	bodyBytes, err := json.Marshal(body)
 	ts.Require().NoError(err)
 
-	confirmURL, err := ts.server.Router.Get(authAttemptCreateUserRouteName).URL()
+	confirmURL, err := ts.server.Router.Get(authAttemptConfirmCreateUserRouteName).URL()
 	ts.Require().NoError(err)
 
 	req := httptest.NewRequest(
@@ -32,7 +32,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_Success() {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler := ts.server.authAttemptCreateUserHandler()
+	handler := ts.server.authAttemptConfirmCreateUserHandler()
 	handler(w, req)
 
 	ts.Equal(http.StatusOK, w.Code)
@@ -45,7 +45,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_BadRequest() {
 	}
 	bodyBytes, _ := json.Marshal(body)
 
-	confirmURL, err := ts.server.Router.Get(authAttemptCreateUserRouteName).URL()
+	confirmURL, err := ts.server.Router.Get(authAttemptConfirmCreateUserRouteName).URL()
 	ts.Require().NoError(err)
 
 	req := httptest.NewRequest(
@@ -56,7 +56,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_BadRequest() {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler := ts.server.authAttemptCreateUserHandler()
+	handler := ts.server.authAttemptConfirmCreateUserHandler()
 	handler(w, req)
 
 	ts.Equal(http.StatusBadRequest, w.Code)
@@ -79,7 +79,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists() {
 	bodyBytes, err := json.Marshal(body)
 	ts.Require().NoError(err)
 
-	confirmURL, err := ts.server.Router.Get(authAttemptCreateUserRouteName).URL()
+	confirmURL, err := ts.server.Router.Get(authAttemptConfirmCreateUserRouteName).URL()
 	ts.Require().NoError(err)
 
 	req := httptest.NewRequest(
@@ -90,7 +90,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists() {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler := ts.server.authAttemptCreateUserHandler()
+	handler := ts.server.authAttemptConfirmCreateUserHandler()
 	handler(w, req)
 
 	ts.Equal(http.StatusInternalServerError, w.Code)
@@ -102,4 +102,3 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists() {
 
 	// ts.True(authAttempts[0].UsedAt.Valid)
 }
-

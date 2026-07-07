@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Server) authAttemptLoginHandler() http.HandlerFunc {
+func (s *Server) authAttemptConfirmLoginHandler() http.HandlerFunc {
 	type request struct {
 		ID          uuid.UUID `json:"id"`
 		OneTimeCode int32     `json:"oneTimeCode"`
@@ -17,6 +17,6 @@ func (s *Server) authAttemptLoginHandler() http.HandlerFunc {
 		RefreshToken string    `json:"refreshToken"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		
+
 	}
 }

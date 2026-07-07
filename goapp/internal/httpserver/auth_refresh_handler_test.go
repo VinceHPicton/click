@@ -17,7 +17,7 @@ func (ts *HandlerSuite) TestRefreshToken() {
 	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
 	ts.Require().NoError(err)
 
-	w := ts.refresh(refreshToken)
+	w := ts.callRefresh(refreshToken)
 
 	ts.Equal(http.StatusOK, w.Code)
 
@@ -40,7 +40,7 @@ func (ts *HandlerSuite) TestRefreshToken_BannedUser() {
 	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
 	ts.Require().NoError(err)
 
-	w := ts.refresh(refreshToken)
+	w := ts.callRefresh(refreshToken)
 
 	ts.Equal(http.StatusUnauthorized, w.Code)
 }
@@ -56,7 +56,7 @@ func (ts *HandlerSuite) TestRefreshToken_SoftDeletedUser() {
 	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
 	ts.Require().NoError(err)
 
-	w := ts.refresh(refreshToken)
+	w := ts.callRefresh(refreshToken)
 
 	ts.Equal(http.StatusBadRequest, w.Code)
 
@@ -70,7 +70,7 @@ func (ts *HandlerSuite) TestRefreshToken_TokenDoesntExist() {
 	_, err = factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	w := ts.refresh(tokens.GenerateRefreshToken())
+	w := ts.callRefresh(tokens.GenerateRefreshToken())
 
 	ts.Equal(http.StatusBadRequest, w.Code)
 
@@ -79,7 +79,7 @@ func (ts *HandlerSuite) TestRefreshToken_TokenDoesntExist() {
 	ts.Require().Equal(0, len(tokenRows))
 }
 
-func (ts *HandlerSuite) refresh(refreshToken string) *httptest.ResponseRecorder {
+func (ts *HandlerSuite) callRefresh(refreshToken string) *httptest.ResponseRecorder {
     body, err := json.Marshal(refreshRequest{
         RefreshToken: refreshToken,
     })
