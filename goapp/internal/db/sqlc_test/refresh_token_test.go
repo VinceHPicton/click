@@ -11,7 +11,8 @@ func (ts *DatabaseSuite) TestCreateRefreshToken() {
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
 
-	refreshToken := tokens.GenerateRefreshToken()
+	refreshToken, err := tokens.GenerateRefreshToken()
+	ts.Require().NoError(err)
 	refreshTokenHash := tokens.HashRefreshToken(refreshToken)
 
 	p := sqlc.CreateRefreshTokenParams{

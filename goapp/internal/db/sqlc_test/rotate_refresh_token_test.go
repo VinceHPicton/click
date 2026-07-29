@@ -17,7 +17,9 @@ func (ts *DatabaseSuite) TestRotateRefreshToken() {
 	_, oldToken, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
-	newRefreshTokenhash := tokens.HashRefreshToken(tokens.GenerateRefreshToken())
+	newRefreshToken, err := tokens.GenerateRefreshToken()
+	ts.Require().NoError(err)
+	newRefreshTokenhash := tokens.HashRefreshToken(newRefreshToken)
 
 	rotateParams := sqlc.RotateRefreshTokenParams{
 		UserID:       user.ID,
@@ -52,7 +54,9 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_SucceedsIfExpiredInFuture() {
 	err = expireTokenTomorrow(ts.db.Pool, token.ID)
 	ts.Require().NoError(err)
 
-	newRefreshTokenhash := tokens.HashRefreshToken(tokens.GenerateRefreshToken())
+	newRefreshToken, err := tokens.GenerateRefreshToken()
+	ts.Require().NoError(err)
+	newRefreshTokenhash := tokens.HashRefreshToken(newRefreshToken)
 
 	rotateParams := sqlc.RotateRefreshTokenParams{
 		UserID:       user.ID,

@@ -17,19 +17,29 @@ func (s *Server) middlewareExample(prevHandler http.HandlerFunc) http.HandlerFun
 	}
 }
 
-// CORSMiddleware wraps the entire mux router so every response (including 404/405
-// from gorilla/mux) includes CORS headers. Router.Use only runs after a route match.
-func CORSMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+// type Middleware func(http.HandlerFunc) http.HandlerFunc
+type Middleware func(http.Handler) http.Handler
+
+func CORSMiddleware() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func Chain(h http.Handler, middlewares ...Middleware) http.Handler {
+	for _, m := range middlewares {
+		h = m(h)
+	}
+	return h
 }
 
 type AuthContext struct {
@@ -44,7 +54,7 @@ func AuthFromContext(ctx context.Context) (AuthContext, bool) {
 	return v, ok
 }
 
-func AuthMiddleware(tokenMgr *tokens.Manager) func(http.Handler) http.Handler {
+func AuthMiddleware(tokenMgr *tokens.Manager) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")

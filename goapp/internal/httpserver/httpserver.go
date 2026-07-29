@@ -19,3 +19,7 @@ type Server struct {
 func (s *Server) authMiddleware() func(http.Handler) http.Handler {
 	return AuthMiddleware(s.TokenManager)
 }
+
+func (s *Server) CORSMiddleware() func(http.Handler) http.Handler {
+	return CORSMiddleware()
+}

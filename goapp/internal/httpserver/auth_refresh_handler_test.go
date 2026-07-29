@@ -70,7 +70,10 @@ func (ts *HandlerSuite) TestRefreshToken_TokenDoesntExist() {
 	_, err = factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	w := ts.callRefresh(tokens.GenerateRefreshToken())
+	refreshToken, err := tokens.GenerateRefreshToken()
+	ts.Require().NoError(err)
+
+	w := ts.callRefresh(refreshToken)
 
 	ts.Equal(http.StatusBadRequest, w.Code)
 

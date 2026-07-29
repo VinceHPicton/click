@@ -9,7 +9,10 @@ import (
 )
 
 func FakeRefreshToken(ctx context.Context, q *sqlc.Queries, userID uuid.UUID) (unhashedToken string, dbToken sqlc.AppRefreshToken, err error) {
-	refreshToken := tokens.GenerateRefreshToken()
+	refreshToken, err := tokens.GenerateRefreshToken()
+	if err != nil {
+		return "", sqlc.AppRefreshToken{}, err
+	}
 	refreshTokenHash := tokens.HashRefreshToken(refreshToken)
 
 	p := sqlc.CreateRefreshTokenParams{

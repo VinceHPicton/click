@@ -57,7 +57,12 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 			return
 		}
 
-		newRefreshToken := tokens.GenerateRefreshToken()
+		newRefreshToken, err := tokens.GenerateRefreshToken()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Failed to generate refresh token"))
+			return
+		}
 		p := sqlc.RotateRefreshTokenParams{
 			UserID:       user.ID,
 			OldTokenHash: hash,

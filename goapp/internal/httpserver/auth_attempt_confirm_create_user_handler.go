@@ -58,7 +58,11 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 			return
 		}
 
-		refreshToken := tokens.GenerateRefreshToken()
+		refreshToken, err := tokens.GenerateRefreshToken()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		_, err = s.Queries.CreateRefreshToken(r.Context(), sqlc.CreateRefreshTokenParams{
 			UserID:    newUserID,

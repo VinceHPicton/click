@@ -27,20 +27,26 @@ func (s *Server) Routes() {
 
 	s.Router.HandleFunc("/dbping", s.middlewareExample(s.handleDBping())).Name(dbPingRouteName)
 
-	s.Router.HandleFunc("/auth-attempt/start/login", s.authAttemptStartLoginHandler()).Methods(http.MethodPost).Name(authAttemptStartLoginRouteName)
-	s.Router.HandleFunc("/auth-attempt/start/create-user", s.authAttemptStartCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptStartCreateUserRouteName)
-	s.Router.HandleFunc("/auth-attempt/confirm/login", s.authAttemptConfirmLoginHandler()).Methods(http.MethodPost).Name(authAttemptConfirmLoginRouteName)
-	s.Router.HandleFunc("/auth-attempt/confirm/create-user", s.authAttemptConfirmCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptConfirmCreateUserRouteName)
+	CORS := s.Router.NewRoute().Subrouter()
+	CORS.Use(s.CORSMiddleware())
 
-	s.Router.HandleFunc("/auth/refresh", s.refreshHandler()).Methods(http.MethodPost).Name(refreshRouteName)
+	CORS.Handle("/auth-attempt/start/login", s.authAttemptStartLoginHandler()).Methods(http.MethodPost).Name(authAttemptStartLoginRouteName)
+	CORS.Handle("/auth-attempt/start/create-user", s.authAttemptStartCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptStartCreateUserRouteName)
+	CORS.Handle("/auth-attempt/confirm/login", s.authAttemptConfirmLoginHandler()).Methods(http.MethodPost).Name(authAttemptConfirmLoginRouteName)
+	CORS.Handle("/auth-attempt/confirm/create-user", s.authAttemptConfirmCreateUserHandler()).Methods(http.MethodPost).Name(authAttemptConfirmCreateUserRouteName)
 
-	protected := s.Router.NewRoute().Subrouter()
-	protected.Use(s.authMiddleware())
+	CORS.HandleFunc("/auth/refresh", s.refreshHandler()).Methods(http.MethodPost).Name(refreshRouteName)
 
-	protected.HandleFunc("/users", s.userCreateHandler()).Methods(http.MethodPost).Name(userCreateRouteName)
-	protected.HandleFunc("/users", s.userGetHandler()).Methods(http.MethodGet).Name(userGetRouteName)
-	protected.HandleFunc("/users", s.userUpdateHandler()).Methods(http.MethodPut).Name(userUpdateRouteName)
-	protected.HandleFunc("/users", s.userDeleteHandler()).Methods(http.MethodDelete).Name(userDeleteRouteName)
+	protectedCORS := CORS.NewRoute().Subrouter()
+	protectedCORS.Use(s.authMiddleware())
 
-	protected.HandleFunc("/auth/logout", s.logoutHandler()).Methods(http.MethodPost).Name(logoutRouteName)
+	protectedCORS.HandleFunc("/users", s.userCreateHandler()).Methods(http.MethodPost).Name(userCreateRouteName)
+	protectedCORS.HandleFunc("/users", s.userGetHandler()).Methods(http.MethodGet).Name(userGetRouteName)
+	protectedCORS.HandleFunc("/users", s.userUpdateHandler()).Methods(http.MethodPut).Name(userUpdateRouteName)
+	protectedCORS.HandleFunc("/users", s.userDeleteHandler()).Methods(http.MethodDelete).Name(userDeleteRouteName)
+
+	protectedCORS.HandleFunc("/auth/logout", s.logoutHandler()).Methods(http.MethodPost).Name(logoutRouteName)
+
+	// A route that needs auth PLUS an extra, route-specific middleware
+	protectedCORS.Handle("/users/export", Chain(s.logoutHandler(), s.authMiddleware())).Methods(http.MethodGet)
 }
