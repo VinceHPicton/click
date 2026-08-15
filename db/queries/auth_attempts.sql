@@ -7,6 +7,17 @@ INSERT INTO app.auth_attempts (
 )
 RETURNING *;
 
+-- name: AuthAttemptCreateWithOneTimeCode :one
+
+INSERT INTO app.auth_attempts (
+  mobile,
+  one_time_code
+) VALUES (
+  $1,
+  $2
+)
+RETURNING *;
+
 -- name: GetAuthAttempts :many
 
 SELECT * FROM app.auth_attempts;
@@ -34,3 +45,12 @@ SELECT id AS user_id
 FROM new_user;
 
 -- name: GetAuthAttempt :one
+SELECT * FROM app.auth_attempts
+WHERE id = $1;
+
+-- name: ConsumeAuthAttemptByID :exec
+UPDATE app.auth_attempts
+SET used_at = NOW()
+WHERE id = $1
+  AND used_at IS NULL
+  AND created_at >= NOW() - INTERVAL '2 minutes';

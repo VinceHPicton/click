@@ -19,6 +19,10 @@ WHERE id = $1;
 SELECT * FROM app.users
 WHERE id = $1 LIMIT 1;
 
+-- name: GetActiveUserByMobile :many
+SELECT * FROM app.users
+WHERE mobile = $1 AND deleted_at IS NULL AND banned_at IS NULL;
+
 -- name: BanUser :exec
 UPDATE app.users
   set banned_at = NOW()

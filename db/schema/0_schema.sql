@@ -17,7 +17,7 @@ CREATE TABLE app.users (
     birth_date DATE,
     last_location_long DECIMAL(9,6),
     last_location_lat DECIMAL(9,6),
-    mobile VARCHAR(20) NOT NULL UNIQUE,
+    mobile VARCHAR(20) NOT NULL,
     last_active TIMESTAMPTZ,
     email VARCHAR(255),
     sex SMALLINT,
