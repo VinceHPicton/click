@@ -39,6 +39,14 @@ func (s *Server) authAttemptConfirmLoginHandler() http.HandlerFunc {
 			return
 		}
 
+		// TODO: auth attempt always consumed, even if user got it wrong
+		err = s.Queries.ConsumeAuthAttempt(r.Context(), authAttempt.ID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Failed to consume auth attempt"))
+			return
+		}
+
 		if authAttempt.OneTimeCode != confirmLoginParams.OneTimeCode {
 			http.Error(w, "Invalid one-time code", http.StatusUnauthorized)
 			return

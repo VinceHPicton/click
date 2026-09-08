@@ -34,33 +34,28 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 		token, err := s.Queries.GetValidTokenByHash(r.Context(), hash)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Invalid refresh token"))
 			return
 		}
 
 		user, err := s.Queries.GetUser(r.Context(), token.UserID)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("User not found"))
 			return
 		}
 
 		if user.BannedAt.Valid {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("User is banned"))
 			return
 		}
 
 		if user.DeletedAt.Valid {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("User is deleted"))
 			return
 		}
 
 		newRefreshToken, err := tokens.GenerateRefreshToken()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to generate refresh token"))
 			return
 		}
 		p := sqlc.RotateRefreshTokenParams{
@@ -79,7 +74,6 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 		accessToken, err := s.TokenManager.GenerateAccessToken(user.ID.String())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Failed to generate access token"))
 			return
 		}
 
@@ -92,7 +86,6 @@ func (s *Server) refreshHandler() http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to encode response"))
 			return
 		}
 	}

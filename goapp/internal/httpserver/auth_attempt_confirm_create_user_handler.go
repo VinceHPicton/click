@@ -69,7 +69,8 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 			return
 		}
 
-		// If no user found, create a new user
+		// If no user found, create a new user - TODO: this will fail if the user is banned, so we should be checking that before here really?
+		// Or we can just return something like "user is banned, or another failure occurred"
 		newUser, err := s.Queries.CreateUserWithMobile(r.Context(), authAttempt.Mobile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

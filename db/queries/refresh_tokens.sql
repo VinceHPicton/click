@@ -3,6 +3,17 @@ INSERT INTO app.refresh_tokens (user_id, token_hash, expires_at, created_at)
 VALUES (sqlc.arg(user_id), sqlc.arg(token_hash), NOW() + INTERVAL '30 days', NOW())
 RETURNING *;
 
+-- name: SetRefreshTokenExpiryByID :exec
+UPDATE app.refresh_tokens
+SET expires_at = sqlc.arg(expires_at)
+WHERE id = sqlc.arg(id);
+
+-- name: RevokeRefreshTokenByID :one
+UPDATE app.refresh_tokens
+SET revoked_at = NOW()
+WHERE id = sqlc.arg(id)
+RETURNING *;
+
 -- name: RotateRefreshToken :one
 WITH revoked AS (
     UPDATE app.refresh_tokens

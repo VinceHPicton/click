@@ -101,3 +101,93 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists_Attem
 
 	ts.True(authAttempts[0].UsedAt.Valid)
 }
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserBanned_AttemptStillUsed() {
+	const phoneNumber = "+447840195455"
+
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.BanUser(ts.ctx, fakeUser.ID)
+	ts.Require().NoError(err)
+
+	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	// Make request to handler
+	body := map[string]interface{}{
+		"id":          authAttempt.ID.String(),
+		"oneTimeCode": authAttempt.OneTimeCode,
+	}
+	bodyBytes, err := json.Marshal(body)
+	ts.Require().NoError(err)
+
+	confirmURL, err := ts.server.Router.Get(authAttemptConfirmCreateUserRouteName).URL()
+	ts.Require().NoError(err)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		confirmURL.String(),
+		bytes.NewReader(bodyBytes),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler := ts.server.authAttemptConfirmCreateUserHandler()
+	handler(w, req)
+
+	ts.Equal(http.StatusInternalServerError, w.Code)
+
+	authAttempts, err := ts.server.Queries.GetAuthAttempts(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(authAttempts))
+
+	ts.True(authAttempts[0].UsedAt.Valid)
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserSoftDeleted_Success() {
+	const phoneNumber = "+447840195455"
+
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	ts.server.Queries.SoftDeleteUser(ts.ctx, fakeUser.ID)
+	ts.Require().NoError(err)
+
+	// Make request to handler
+	body := map[string]interface{}{
+		"id":          authAttempt.ID.String(),
+		"oneTimeCode": authAttempt.OneTimeCode,
+	}
+	bodyBytes, err := json.Marshal(body)
+	ts.Require().NoError(err)
+
+	confirmURL, err := ts.server.Router.Get(authAttemptConfirmCreateUserRouteName).URL()
+	ts.Require().NoError(err)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		confirmURL.String(),
+		bytes.NewReader(bodyBytes),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler := ts.server.authAttemptConfirmCreateUserHandler()
+	handler(w, req)
+
+	ts.Equal(http.StatusOK, w.Code)
+
+	users, err := ts.server.Queries.GetAllUsers(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(2, len(users))
+
+	authAttempts, err := ts.server.Queries.GetAuthAttempts(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(authAttempts))
+
+	ts.True(authAttempts[0].UsedAt.Valid)
+}
