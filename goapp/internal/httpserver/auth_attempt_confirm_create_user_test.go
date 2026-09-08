@@ -62,7 +62,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_BadRequest() {
 	ts.Equal(http.StatusBadRequest, w.Code)
 }
 
-func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists() {
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists_AttemptStillUsed() {
 	const phoneNumber = "+447840195455"
 
 	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
@@ -95,11 +95,9 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists() {
 
 	ts.Equal(http.StatusBadRequest, w.Code)
 
-	// TODO: if user already exists, auth attempt is currently NOT "used" - should that be the case?.
-	// authAttempts, err := ts.server.Queries.GetAuthAttempts(ts.ctx)
-	// ts.Require().NoError(err)
-	// ts.Require().Equal(1, len(authAttempts))
+	authAttempts, err := ts.server.Queries.GetAuthAttempts(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(authAttempts))
 
-	// // This line fails test, because its NOT used
-	// ts.True(authAttempts[0].UsedAt.Valid)
+	ts.True(authAttempts[0].UsedAt.Valid)
 }
