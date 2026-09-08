@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"time"
 	"vincehpicton/click/internal/db/factory"
+	"vincehpicton/click/internal/db/sqlc"
 )
 
 func (ts *HandlerSuite) TestLogout() {
@@ -54,29 +56,30 @@ func (ts *HandlerSuite) TestLogout_InvalidRefreshToken() {
 	ts.Equal(http.StatusBadRequest, w.Code)
 }
 
-// func (ts *HandlerSuite) TestLogout_ExpiredRefresh() {
-// 	var err error
-// 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
-// 	ts.Require().NoError(err)
+func (ts *HandlerSuite) TestLogout_ExpiredRefresh() {
+	var err error
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
 
-// 	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
-// 	ts.Require().NoError(err)
+	refreshToken, dbToken, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	ts.Require().NoError(err)
 
-// 	err = ts.server.Queries.SetRefreshTokenExpiryByID(ts.ctx, sqlc.SetRefreshTokenExpiryByIDParams{
-// 		ExpiresAt: time.Now().Add(-24 * time.Hour),
-// 	})
-// 	ts.Require().NoError(err)
+	err = ts.server.Queries.SetRefreshTokenExpiryByID(ts.ctx, sqlc.SetRefreshTokenExpiryByIDParams{
+		ID:        dbToken.ID,
+		ExpiresAt: time.Now().Add(-24 * time.Hour),
+	})
+	ts.Require().NoError(err)
 
-// 	w := ts.callLogout(refreshToken)
-// 	ts.Equal(http.StatusBadRequest, w.Code)
+	w := ts.callLogout(refreshToken)
+	ts.Equal(http.StatusBadRequest, w.Code)
 
-// 	tokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
-// 	ts.Require().NoError(err)
-// 	ts.Equal(1, len(tokens))
-// 	token := tokens[0]
+	tokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Equal(1, len(tokens))
+	token := tokens[0]
 
-// 	ts.Equal(false, token.RevokedAt.Valid)
-// }
+	ts.Equal(false, token.RevokedAt.Valid)
+}
 
 func (ts *HandlerSuite) callLogout(refreshToken string) *httptest.ResponseRecorder {
 	body, err := json.Marshal(logoutRequest{
