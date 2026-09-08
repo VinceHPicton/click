@@ -4,6 +4,25 @@ import (
 	"vincehpicton/click/internal/db/factory"
 )
 
+const (
+	mobile = "+447712345678"
+)
+
+func (ts *DatabaseSuite) TestCreateUserWithMobile() {
+	var err error
+
+	newUser, err := ts.queries.CreateUserWithMobile(ts.ctx, mobile)
+	ts.Require().NoError(err)
+
+	users, err := ts.queries.GetAllUsers(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(users))
+
+	queriedUser, err := ts.queries.GetUser(ts.ctx, newUser.ID)
+	ts.Require().NoError(err)
+	ts.Equal(newUser.Mobile, queriedUser.Mobile)
+}
+
 func (ts *DatabaseSuite) TestSoftDeleteUser() {
 	var err error
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
@@ -54,17 +73,17 @@ func (ts *DatabaseSuite) TestBanUser() {
 	ts.True(user.BannedAt.Valid)
 }
 
-func (ts *DatabaseSuite) TestGetActiveUserByMobile() {
+func (ts *DatabaseSuite) TestGetActiveUsersByMobile() {
 	var err error
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
 
-	users, err := ts.queries.GetActiveUserByMobile(ts.ctx, user.Mobile)
+	users, err := ts.queries.GetActiveUsersByMobile(ts.ctx, user.Mobile)
 	ts.Require().NoError(err)
 	ts.Require().Equal(1, len(users))
 }
 
-func (ts *DatabaseSuite) TestGetActiveUserByMobile_UserBanned() {
+func (ts *DatabaseSuite) TestGetActiveUsersByMobile_UserBanned() {
 	var err error
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
@@ -72,12 +91,12 @@ func (ts *DatabaseSuite) TestGetActiveUserByMobile_UserBanned() {
 	err = ts.queries.BanUser(ts.ctx, user.ID)
 	ts.Require().NoError(err)
 
-	users, err := ts.queries.GetActiveUserByMobile(ts.ctx, user.Mobile)
+	users, err := ts.queries.GetActiveUsersByMobile(ts.ctx, user.Mobile)
 	ts.Require().NoError(err)
 	ts.Require().Equal(0, len(users))
 }
 
-func (ts *DatabaseSuite) TestGetActiveUserByMobile_UserDeleted() {
+func (ts *DatabaseSuite) TestGetActiveUsersByMobile_UserDeleted() {
 	var err error
 	user, err := factory.FakeUser(ts.ctx, ts.queries)
 	ts.Require().NoError(err)
@@ -85,12 +104,12 @@ func (ts *DatabaseSuite) TestGetActiveUserByMobile_UserDeleted() {
 	err = ts.queries.SoftDeleteUser(ts.ctx, user.ID)
 	ts.Require().NoError(err)
 
-	users, err := ts.queries.GetActiveUserByMobile(ts.ctx, user.Mobile)
+	users, err := ts.queries.GetActiveUsersByMobile(ts.ctx, user.Mobile)
 	ts.Require().NoError(err)
 	ts.Require().Equal(0, len(users))
 }
 
-func (ts *DatabaseSuite) TestGetActiveUserByMobile_UserDeletedButNewExistsWithMobile() {
+func (ts *DatabaseSuite) TestGetActiveUsersByMobile_UserDeletedButNewExistsWithMobile() {
 	var err error
 	const mobile = "+447712345678"
 	deletedUser, err := factory.FakeUser(ts.ctx, ts.queries, factory.WithMobile(mobile))
@@ -102,7 +121,7 @@ func (ts *DatabaseSuite) TestGetActiveUserByMobile_UserDeletedButNewExistsWithMo
 	undeletedUser, err := factory.FakeUser(ts.ctx, ts.queries, factory.WithMobile(mobile))
 	ts.Require().NoError(err)
 
-	users, err := ts.queries.GetActiveUserByMobile(ts.ctx, undeletedUser.Mobile)
+	users, err := ts.queries.GetActiveUsersByMobile(ts.ctx, undeletedUser.Mobile)
 	ts.Require().NoError(err)
 	ts.Require().Equal(1, len(users))
 	ts.Require().Equal(undeletedUser.ID, users[0].ID)
@@ -116,7 +135,6 @@ func (ts *DatabaseSuite) TestUnableToCreateTwoUsersWithSameMobile() {
 	_, err = factory.FakeUser(ts.ctx, ts.queries, factory.WithMobile(mobile))
 	ts.Require().Error(err)
 }
-
 
 func (ts *DatabaseSuite) TestAbleToCreateUserWithSameMobileIfOldUserIsDeleted() {
 	const mobile = "+447712345678"

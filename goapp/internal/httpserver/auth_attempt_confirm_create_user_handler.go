@@ -36,23 +36,47 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 			return
 		}
 
-		confirmAuthAttemptParams := sqlc.AuthAttemptCreateUserParams{
-			ID:          req.ID,
-			OneTimeCode: req.OneTimeCode,
+		// Get the auth attempt and compare codes
+		authAttempt, err := s.Queries.GetValidAuthAttempt(r.Context(), req.ID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Invalid auth attempt ID"))
+			return
 		}
 
-		newUserID, err := s.Queries.AuthAttemptCreateUser(r.Context(), confirmAuthAttemptParams)
+		// TODO: auth attempt always consumed, even if user got it wrong
+		err = s.Queries.ConsumeAuthAttempt(r.Context(), authAttempt.ID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Failed to consume auth attempt"))
+			return
+		}
+
+		if authAttempt.OneTimeCode != req.OneTimeCode {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Invalid one-time code"))
+			return
+		}
+
+		// If successful, query for the user by mobile
+		relevantUsers, err := s.Queries.GetActiveUsersByMobile(r.Context(), authAttempt.Mobile)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if len(relevantUsers) != 0 {
+			http.Error(w, "User already exists", http.StatusBadRequest)
+			return
+		}
+
+		// If no user found, create a new user
+		newUser, err := s.Queries.CreateUserWithMobile(r.Context(), authAttempt.Mobile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if newUserID == uuid.Nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		accessToken, err := s.TokenManager.GenerateAccessToken(newUserID.String())
+		accessToken, err := s.TokenManager.GenerateAccessToken(newUser.ID.String())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -65,7 +89,7 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 		}
 
 		_, err = s.Queries.CreateRefreshToken(r.Context(), sqlc.CreateRefreshTokenParams{
-			UserID:    newUserID,
+			UserID:    newUser.ID,
 			TokenHash: tokens.HashRefreshToken(refreshToken),
 		})
 		if err != nil {
@@ -74,7 +98,7 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 		}
 
 		response := response{
-			UserID:       newUserID,
+			UserID:       newUser.ID,
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}

@@ -7,6 +7,14 @@ INSERT INTO app.users (
 )
 RETURNING *;
 
+-- name: CreateUserWithMobile :one
+INSERT INTO app.users (
+  mobile
+) VALUES (
+  $1
+)
+RETURNING *;
+
 -- name: HardDeleteUser :exec
 DELETE FROM app.users WHERE id = $1;
 
@@ -19,7 +27,7 @@ WHERE id = $1;
 SELECT * FROM app.users
 WHERE id = $1 LIMIT 1;
 
--- name: GetActiveUserByMobile :many
+-- name: GetActiveUsersByMobile :many
 SELECT * FROM app.users
 WHERE mobile = $1 AND deleted_at IS NULL AND banned_at IS NULL;
 

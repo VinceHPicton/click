@@ -1,5 +1,7 @@
 package sqlc_test
 
+import "github.com/google/uuid"
+
 const (
 	phoneNumber = "+447712345678"
 )
@@ -28,6 +30,17 @@ func (ts *DatabaseSuite) TestGetAuthAttempt() {
 	ts.Require().Equal(attempt.ID, getAttempt.ID)
 }
 
+func (ts *DatabaseSuite) TestGetValidAuthAttempt() {
+	var err error
+
+	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	ts.Require().NoError(err)
+
+	getAttempt, err := ts.queries.GetValidAuthAttempt(ts.ctx, attempt.ID)
+	ts.Require().NoError(err)
+	ts.Require().Equal(attempt.ID, getAttempt.ID)
+}
+
 func (ts *DatabaseSuite) TestConsumeAuthAttemptByID() {
 	var err error
 
@@ -40,4 +53,11 @@ func (ts *DatabaseSuite) TestConsumeAuthAttemptByID() {
 	consumedAttempt, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
 	ts.Require().NoError(err)
 	ts.Require().Equal(consumedAttempt.UsedAt.Valid, true)
+}
+
+func (ts *DatabaseSuite) TestSQLCExecDoesNotErrorIfNoRowsAffected() {
+	var err error
+
+	err = ts.queries.ConsumeAuthAttemptByID(ts.ctx, uuid.New())
+	ts.Require().NoError(err)
 }

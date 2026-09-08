@@ -45,7 +45,7 @@ func (s *Server) authAttemptConfirmLoginHandler() http.HandlerFunc {
 		}
 
 		// Get user by mobile number
-		relevantUsers, err := s.Queries.GetActiveUserByMobile(r.Context(), authAttempt.Mobile)
+		relevantUsers, err := s.Queries.GetActiveUsersByMobile(r.Context(), authAttempt.Mobile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
