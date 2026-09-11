@@ -100,8 +100,8 @@ func (ts *HandlerSuite) callRefresh(refreshToken string) *httptest.ResponseRecor
 
     w := httptest.NewRecorder()
 
-	handler := ts.server.refreshHandler()
-	handler(w, req)
+	ts.server.Routes()
+	ts.server.Router.ServeHTTP(w, req)
 
     return w
 }

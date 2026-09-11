@@ -172,8 +172,8 @@ func (ts *HandlerSuite) callConfirmLogin(reqStruct confirmLoginRequest) *httptes
 
 	w := httptest.NewRecorder()
 
-	handler := ts.server.authAttemptConfirmLoginHandler()
-	handler(w, httpReq)
+	ts.server.Routes()
+	ts.server.Router.ServeHTTP(w, httpReq)
 
 	return w
 }

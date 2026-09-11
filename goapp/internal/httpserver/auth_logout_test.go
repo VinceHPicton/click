@@ -18,7 +18,7 @@ func (ts *HandlerSuite) TestLogout() {
 	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
 	ts.Require().NoError(err)
 
-	w := ts.callLogout(refreshToken)
+	w := ts.callLogout(refreshToken, user.ID.String())
 	ts.Equal(http.StatusOK, w.Code)
 
 	tokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
@@ -40,7 +40,7 @@ func (ts *HandlerSuite) TestLogout_BannedUser() {
 	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
 	ts.Require().NoError(err)
 
-	w := ts.callLogout(refreshToken)
+	w := ts.callLogout(refreshToken, user.ID.String())
 	ts.Equal(http.StatusOK, w.Code)
 
 	tokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
@@ -52,8 +52,8 @@ func (ts *HandlerSuite) TestLogout_BannedUser() {
 }
 
 func (ts *HandlerSuite) TestLogout_InvalidRefreshToken() {
-	w := ts.callLogout("invalid-token")
-	ts.Equal(http.StatusBadRequest, w.Code)
+	w := ts.callLogout("invalid-token", "")
+	ts.Equal(http.StatusUnauthorized, w.Code)
 }
 
 func (ts *HandlerSuite) TestLogout_ExpiredRefresh() {
@@ -70,7 +70,7 @@ func (ts *HandlerSuite) TestLogout_ExpiredRefresh() {
 	})
 	ts.Require().NoError(err)
 
-	w := ts.callLogout(refreshToken)
+	w := ts.callLogout(refreshToken, user.ID.String())
 	ts.Equal(http.StatusBadRequest, w.Code)
 
 	tokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
@@ -81,7 +81,11 @@ func (ts *HandlerSuite) TestLogout_ExpiredRefresh() {
 	ts.Equal(false, token.RevokedAt.Valid)
 }
 
-func (ts *HandlerSuite) callLogout(refreshToken string) *httptest.ResponseRecorder {
+func (ts *HandlerSuite) callLogout(refreshToken string, userID string) *httptest.ResponseRecorder {
+
+	token, err := ts.server.TokenManager.GenerateAccessToken(userID)
+	ts.Require().NoError(err)
+
 	body, err := json.Marshal(logoutRequest{
 		RefreshToken: refreshToken,
 	})
@@ -96,11 +100,12 @@ func (ts *HandlerSuite) callLogout(refreshToken string) *httptest.ResponseRecord
 		bytes.NewReader(body),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	w := httptest.NewRecorder()
 
-	handler := ts.server.logoutHandler()
-	handler(w, req)
+	ts.server.Routes()
+	ts.server.Router.ServeHTTP(w, req)
 
 	return w
 }

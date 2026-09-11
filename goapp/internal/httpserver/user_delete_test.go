@@ -25,7 +25,7 @@ func (ts *HandlerSuite) TestDeleteUser() {
 func (ts *HandlerSuite) TestDeleteUser_UserDoesntExist() {
 	w := ts.callDelete("non-existent-user-id")
 
-	ts.Equal(http.StatusInternalServerError, w.Code)
+	ts.Equal(http.StatusUnauthorized, w.Code)
 }
 
 func (ts *HandlerSuite) callDelete(userID string) *httptest.ResponseRecorder {
@@ -47,7 +47,6 @@ func (ts *HandlerSuite) callDelete(userID string) *httptest.ResponseRecorder {
 
 	ts.server.Routes()
 
-	// Route through the router so CORS + auth middleware run before the handler.
 	ts.server.Router.ServeHTTP(w, req)
 
 	return w

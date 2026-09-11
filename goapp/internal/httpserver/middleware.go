@@ -86,7 +86,7 @@ func AuthMiddleware(tokenMgr *tokens.Manager) Middleware {
 
 			userUUID, err := uuid.Parse(claims.Subject)
 			if err != nil {
-				http.Error(w, "user ID not valid uuid", http.StatusInternalServerError)
+				http.Error(w, "user ID not valid uuid", http.StatusUnauthorized)
 				return
 			}
 
