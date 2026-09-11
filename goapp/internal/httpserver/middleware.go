@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"vincehpicton/click/internal/tokens"
+
+	"github.com/google/uuid"
 )
 
 func (s *Server) middlewareExample(prevHandler http.HandlerFunc) http.HandlerFunc {
@@ -43,7 +45,7 @@ func Chain(h http.Handler, middlewares ...Middleware) http.Handler {
 }
 
 type AuthContext struct {
-	UserID string
+	UserID uuid.UUID
 }
 type contextKey string
 
@@ -82,8 +84,14 @@ func AuthMiddleware(tokenMgr *tokens.Manager) Middleware {
 				return
 			}
 
+			userUUID, err := uuid.Parse(claims.Subject)
+			if err != nil {
+				http.Error(w, "user ID not valid uuid", http.StatusInternalServerError)
+				return
+			}
+
 			ctx := context.WithValue(r.Context(), AuthContextKey, AuthContext{
-				UserID: claims.Subject,
+				UserID: userUUID,
 			})
 
 			next.ServeHTTP(w, r.WithContext(ctx))

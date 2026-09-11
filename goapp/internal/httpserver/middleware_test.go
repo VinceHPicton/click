@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/stretchr/testify/require"
 
 	"vincehpicton/click/internal/tokens"
@@ -20,7 +22,7 @@ type buildAuthHeaderFunc func(t *testing.T, tokenMgr *tokens.Manager) string
 
 func TestAuthMiddleware(t *testing.T) {
 	const secret = "super-secret-code"
-	const userID = "fake-uuid"
+	userID := uuid.New()
 
 	tokenMgr, err := tokens.New(secret)
 	require.NoError(t, err)
@@ -50,24 +52,24 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "valid Bearer token (capitalized)",
 			buildHeader: func(t *testing.T, tm *tokens.Manager) string {
-				tok, err := tm.GenerateAccessToken(userID)
+				tok, err := tm.GenerateAccessToken(userID.String())
 				require.NoError(t, err)
 				return "Bearer " + tok
 			},
 			wantStatus:     http.StatusOK,
 			wantNextCalled: true,
-			wantUserID:     userID,
+			wantUserID:     userID.String(),
 		},
 		{
 			name: "valid bearer token (lowercase)",
 			buildHeader: func(t *testing.T, tm *tokens.Manager) string {
-				tok, err := tm.GenerateAccessToken(userID)
+				tok, err := tm.GenerateAccessToken(userID.String())
 				require.NoError(t, err)
 				return "bearer " + tok
 			},
 			wantStatus:     http.StatusOK,
 			wantNextCalled: true,
-			wantUserID:     userID,
+			wantUserID:     userID.String(),
 		},
 		{
 			name:           "missing Authorization header",
@@ -108,7 +110,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "token signed by a different manager/secret",
 			buildHeader: func(t *testing.T, _ *tokens.Manager) string {
-				tok, err := otherTokenMgr.GenerateAccessToken(userID)
+				tok, err := otherTokenMgr.GenerateAccessToken(userID.String())
 				require.NoError(t, err)
 				return "Bearer " + tok
 			},
@@ -118,7 +120,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "expired token",
 			buildHeader: func(t *testing.T, _ *tokens.Manager) string {
-				tok, err := expiredTokenMgr.GenerateAccessToken(userID)
+				tok, err := expiredTokenMgr.GenerateAccessToken(userID.String())
 				require.NoError(t, err)
 				return "Bearer " + tok
 			},
@@ -162,7 +164,7 @@ func TestAuthMiddleware(t *testing.T) {
 			if tt.wantNextCalled {
 				authCtx, ok := AuthFromContext(capturedReq.Context())
 				require.True(t, ok, "expected auth context to be present")
-				require.Equal(t, tt.wantUserID, authCtx.UserID)
+				require.Equal(t, tt.wantUserID, authCtx.UserID.String())
 			}
 		})
 	}
@@ -182,8 +184,9 @@ func TestAuthMiddleware_HappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	const userID = "fake uuid"
-	token, err := tokenMgr.GenerateAccessToken(userID)
+	userID := uuid.New()
+
+	token, err := tokenMgr.GenerateAccessToken(userID.String())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,6 +216,26 @@ func TestAuthMiddleware_HappyPath(t *testing.T) {
 }
 
 func TestAuthMiddleware_NoToken(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	request := httptest.NewRequest(http.MethodGet, "/users", nil)
+	recorder := httptest.NewRecorder()
+
+	tokenMgr, err := tokens.New("super-secret-code")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	AuthMiddleware(tokenMgr)(next).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Errorf("expected %d, got %d", http.StatusUnauthorized, recorder.Code)
+	}
+}
+
+
+func TestAuthMiddleware_InvalidUUID(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
