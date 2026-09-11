@@ -36,7 +36,6 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 			return
 		}
 
-		// Get the auth attempt and compare codes
 		authAttempt, err := s.Queries.GetValidAuthAttempt(r.Context(), req.ID)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
