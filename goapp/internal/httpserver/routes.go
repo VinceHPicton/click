@@ -8,9 +8,6 @@ const (
 	dbPingRouteName = "dbping"
 	dbTestRouteName = "insertTest"
 
-	userCreateRouteName = "userCreate"
-	userGetRouteName    = "userGet"
-	userUpdateRouteName = "userUpdate"
 	userDeleteRouteName = "userDelete"
 
 	authAttemptStartLoginRouteName      = "authAttemptStartLogin"
@@ -40,9 +37,6 @@ func (s *Server) Routes() {
 	protectedCORS := CORS.NewRoute().Subrouter()
 	protectedCORS.Use(s.authMiddleware())
 
-	protectedCORS.HandleFunc("/users", s.userCreateHandler()).Methods(http.MethodPost).Name(userCreateRouteName)
-	protectedCORS.HandleFunc("/users", s.userGetHandler()).Methods(http.MethodGet).Name(userGetRouteName)
-	protectedCORS.HandleFunc("/users", s.userUpdateHandler()).Methods(http.MethodPut).Name(userUpdateRouteName)
 	protectedCORS.HandleFunc("/users", s.userDeleteHandler()).Methods(http.MethodDelete).Name(userDeleteRouteName)
 
 	protectedCORS.HandleFunc("/auth/logout", s.logoutHandler()).Methods(http.MethodPost).Name(logoutRouteName)
