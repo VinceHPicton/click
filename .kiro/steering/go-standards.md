@@ -37,7 +37,7 @@ as a reference for the expected style). Apply them when writing or editing Go co
   plaintext to the caller once and never persist it.
 
 ## Testing
-- Use testify. Test SQL queries under `db/sqlc_test/` against Postgres via testcontainers.
+- Use testify. Test SQL queries under `db/sqlc_test/` by following the pattern already used in the package.
 - Do not add unit tests for generated sqlc Go code.
 - Name tests `<feature>_test.go` and shared setup `*_SETUP_test.go`.
 
