@@ -3,8 +3,6 @@ package httpserver
 import (
 	"encoding/json"
 	"net/http"
-	"vincehpicton/click/internal/db/sqlc"
-	"vincehpicton/click/internal/tokens"
 
 	"github.com/google/uuid"
 )
@@ -21,97 +19,26 @@ type confirmLoginResponse struct {
 }
 
 func (s *Server) authAttemptConfirmLoginHandler() http.HandlerFunc {
+	service := s.service()
+
 	return func(w http.ResponseWriter, r *http.Request) {
+		req := confirmLoginRequest{}
 
-		confirmLoginParams := confirmLoginRequest{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "malformed request body", http.StatusBadRequest)
+			return
+		}
 
-		err := json.NewDecoder(r.Body).Decode(&confirmLoginParams)
-
+		session, err := service.ConfirmLogin(r.Context(), req.ID, req.OneTimeCode)
 		if err != nil {
-			w.Write([]byte(err.Error()))
+			writeError(w, err)
 			return
 		}
 
-		// Get the one-time code/login req if it exists
-		authAttempt, err := s.Queries.GetAuthAttempt(r.Context(), confirmLoginParams.ID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// TODO: auth attempt always consumed, even if user got it wrong
-		err = s.Queries.ConsumeAuthAttempt(r.Context(), authAttempt.ID)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Failed to consume auth attempt"))
-			return
-		}
-
-		if authAttempt.OneTimeCode != confirmLoginParams.OneTimeCode {
-			http.Error(w, "Invalid one-time code", http.StatusUnauthorized)
-			return
-		}
-
-		// Get user by mobile number
-		relevantUsers, err := s.Queries.GetActiveUsersByMobile(r.Context(), authAttempt.Mobile)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if len(relevantUsers) > 1 {
-			// TODO: log big error here, this should never happen
-			// TODO: remove this informative error in prod
-			http.Error(w, "multiple users found", http.StatusInternalServerError)
-			return
-		}
-		if len(relevantUsers) == 0 {
-			http.Error(w, "User not found", http.StatusNotFound)
-			return
-		}
-		user := relevantUsers[0]
-
-		refreshToken, err := tokens.GenerateRefreshToken()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		hashedRefreshToken := tokens.HashRefreshToken(refreshToken)
-
-		params := sqlc.CreateRefreshTokenParams{
-			UserID:    user.ID,
-			TokenHash: hashedRefreshToken,
-		}
-
-		err = s.Queries.ConsumeAuthAttemptByID(r.Context(), confirmLoginParams.ID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		_, err = s.Queries.CreateRefreshToken(r.Context(), params)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		accessToken, err := s.TokenManager.GenerateAccessToken(user.ID.String())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		response := confirmLoginResponse{
-			UserID:       user.ID,
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(response)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to encode response"))
-			return
-		}
+		writeJSON(w, http.StatusOK, confirmLoginResponse{
+			UserID:       session.UserID,
+			AccessToken:  session.AccessToken,
+			RefreshToken: session.RefreshToken,
+		})
 	}
 }

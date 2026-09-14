@@ -1,6 +1,11 @@
 package sqlc_test
 
-import "github.com/google/uuid"
+import (
+	"database/sql"
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 const (
 	phoneNumber = "+447712345678"
@@ -39,6 +44,13 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt() {
 	getAttempt, err := ts.queries.GetValidAuthAttempt(ts.ctx, attempt.ID)
 	ts.Require().NoError(err)
 	ts.Require().Equal(attempt.ID, getAttempt.ID)
+}
+
+func (ts *DatabaseSuite) TestGetValidAuthAttempt_DoesntExist() {
+	_, err := ts.queries.GetValidAuthAttempt(ts.ctx, uuid.New())
+	ts.Require().Error(err)
+
+	ts.True(errors.Is(err, sql.ErrNoRows))
 }
 
 func (ts *DatabaseSuite) TestConsumeAuthAttemptByID() {
