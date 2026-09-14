@@ -2,6 +2,14 @@ package service
 
 import "errors"
 
+// Sentinel errors returned by the service for expected, caller-visible failures.
+//
+// Anything not in this list is an unexpected failure (a DB error, a constraint
+// violation, a broken invariant) and should be treated by callers as an
+// internal error: logged server-side, reported generically to the client.
+//
+// The service deliberately knows nothing about HTTP. Mapping these to status
+// codes is the transport layer's job; see httpserver.writeError.
 var (
 	ErrInvalidAttempt = errors.New("auth attempt is invalid, expired, or already used")
 
