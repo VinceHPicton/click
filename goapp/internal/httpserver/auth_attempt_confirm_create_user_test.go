@@ -18,6 +18,19 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_Success() {
 	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
 
 	ts.Equal(http.StatusOK, w.Code)
+
+	resp := confirmCreateUserResponse{}
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	ts.Require().NoError(err)
+
+	ts.NotEqual(uuid.Nil, resp.UserID)
+	ts.NotEmpty(resp.AccessToken)
+	ts.NotEmpty(resp.RefreshToken)
+
+	users, err := ts.server.Queries.GetAllUsers(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Len(users, 1)
+	ts.Equal(users[0].ID, resp.UserID)
 }
 
 func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_BadRequest() {
@@ -112,13 +125,13 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_ConsumedAttemptReused()
 }
 
 func (ts *HandlerSuite) callConfirmCreateUser(id uuid.UUID, oneTimeCode int32) *httptest.ResponseRecorder {
-	return ts.callConfirmCreateUserRaw(map[string]interface{}{
-		"id":          id.String(),
-		"oneTimeCode": oneTimeCode,
+	return ts.callConfirmCreateUserRaw(confirmCreateUserRequest{
+		ID:          id,
+		OneTimeCode: oneTimeCode,
 	})
 }
 
-func (ts *HandlerSuite) callConfirmCreateUserRaw(body map[string]interface{}) *httptest.ResponseRecorder {
+func (ts *HandlerSuite) callConfirmCreateUserRaw(body any) *httptest.ResponseRecorder {
 	bodyBytes, err := json.Marshal(body)
 	ts.Require().NoError(err)
 

@@ -6,22 +6,22 @@ import (
 	"github.com/google/uuid"
 )
 
+type confirmCreateUserRequest struct {
+	ID          uuid.UUID `json:"id"`
+	OneTimeCode int32     `json:"oneTimeCode"`
+}
+
+type confirmCreateUserResponse struct {
+	UserID       uuid.UUID `json:"userId"`
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+}
+
 func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 	service := s.service()
 
-	type request struct {
-		ID          uuid.UUID `json:"id"`
-		OneTimeCode int32     `json:"oneTimeCode"`
-	}
-
-	type response struct {
-		UserID       uuid.UUID `json:"userId"`
-		AccessToken  string    `json:"accessToken"`
-		RefreshToken string    `json:"refreshToken"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		req, ok := decodeJSON[request](w, r)
+		req, ok := decodeJSON[confirmCreateUserRequest](w, r)
 		if !ok {
 			return
 		}
@@ -32,7 +32,7 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, response{
+		writeJSON(w, http.StatusOK, confirmCreateUserResponse{
 			UserID:       session.UserID,
 			AccessToken:  session.AccessToken,
 			RefreshToken: session.RefreshToken,
