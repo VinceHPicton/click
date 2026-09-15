@@ -27,7 +27,7 @@ func (s *Service) createUserWithCredentials(ctx context.Context, attempt sqlc.Ap
 
 	// If no user found, create a new user - TODO: this will fail if the user is banned, so we should be checking that before here really?
 	// Or we can just return something like "user is banned, or another failure occurred"
-	newUser, err := s.queries.CreateUserWithMobile(ctx, attempt.Mobile)
+	newUser, err := queriesTx.CreateUserWithMobile(ctx, attempt.Mobile)
 	if err != nil {
 		return Session{}, err
 	}

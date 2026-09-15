@@ -5,6 +5,7 @@ import (
 )
 
 func (s *Server) userDeleteHandler() http.HandlerFunc {
+	// TODO: leaving these here to just illustrate the pattern of structs scoped to the handler
 	type request struct {
 	}
 	type response struct {
