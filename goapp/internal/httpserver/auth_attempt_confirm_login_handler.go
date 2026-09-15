@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -22,10 +21,8 @@ func (s *Server) authAttemptConfirmLoginHandler() http.HandlerFunc {
 	service := s.service()
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := confirmLoginRequest{}
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "malformed request body", http.StatusBadRequest)
+		req, ok := decodeJSON[confirmLoginRequest](w, r)
+		if !ok {
 			return
 		}
 

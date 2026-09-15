@@ -27,17 +27,8 @@ type authAttemptStartResponse struct {
 func (s *Server) authAttemptStartLoginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		createAuthAttemptParams := authAttemptStartRequest{}
-
-		err := json.NewDecoder(r.Body).Decode(&createAuthAttemptParams)
-
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		if !createAuthAttemptParams.Valid() {
-			w.WriteHeader(http.StatusBadRequest)
+		createAuthAttemptParams, ok := decodeJSON[authAttemptStartRequest](w, r)
+		if !ok {
 			return
 		}
 

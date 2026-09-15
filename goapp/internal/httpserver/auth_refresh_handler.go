@@ -18,15 +18,8 @@ type refreshResponse struct {
 func (s *Server) refreshHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		req := refreshRequest{}
-
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-
-		err := decoder.Decode(&req)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+		req, ok := decodeJSON[refreshRequest](w, r)
+		if !ok {
 			return
 		}
 

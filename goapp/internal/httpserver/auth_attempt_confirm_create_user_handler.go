@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -22,13 +21,8 @@ func (s *Server) authAttemptConfirmCreateUserHandler() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := request{}
-
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-
-		if err := decoder.Decode(&req); err != nil {
-			http.Error(w, "malformed request body", http.StatusBadRequest)
+		req, ok := decodeJSON[request](w, r)
+		if !ok {
 			return
 		}
 

@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"encoding/json"
 	"net/http"
 	"vincehpicton/click/internal/tokens"
 )
@@ -15,15 +14,8 @@ func (s *Server) logoutHandler() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		req := logoutRequest{}
-
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-
-		err := decoder.Decode(&req)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+		req, ok := decodeJSON[logoutRequest](w, r)
+		if !ok {
 			return
 		}
 
