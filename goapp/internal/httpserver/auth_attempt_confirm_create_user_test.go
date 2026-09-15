@@ -93,6 +93,24 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserSoftDeleted_Success
 	ts.True(authAttempts[0].UsedAt.Valid)
 }
 
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_ConsumedAttemptReused() {
+	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195456")
+	ts.Require().NoError(err)
+
+	// First call consumes the auth attempt and creates the user.
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.Equal(http.StatusOK, w.Code)
+
+	// Second call with the same (now consumed) auth attempt must fail.
+	reusedW := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.NotEqual(http.StatusOK, reusedW.Code)
+
+	// Only one user should have been created.
+	users, err := ts.server.Queries.GetAllUsers(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(users))
+}
+
 func (ts *HandlerSuite) callConfirmCreateUser(id uuid.UUID, oneTimeCode int32) *httptest.ResponseRecorder {
 	return ts.callConfirmCreateUserRaw(map[string]interface{}{
 		"id":          id.String(),

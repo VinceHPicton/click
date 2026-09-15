@@ -32,8 +32,7 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 // Postgres messages to callers.
 func writeError(w http.ResponseWriter, err error) {
 	switch {
-	case errors.Is(err, service.ErrInvalidAttempt):
-	case errors.Is(err, service.ErrInvalidCode):
+	case errors.Is(err, service.ErrInvalidAttempt), errors.Is(err, service.ErrInvalidCode):
 		// Same response for both, so a caller can't tell a bad attempt ID from
 		// a bad code.
 		http.Error(w, "invalid or expired one-time code", http.StatusUnauthorized)

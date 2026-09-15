@@ -177,3 +177,31 @@ func (ts *HandlerSuite) callConfirmLogin(reqStruct confirmLoginRequest) *httptes
 
 	return w
 }
+
+func (ts *HandlerSuite) TestConfirmLogin_ConsumedAttemptReused() {
+	var err error
+
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	ts.Require().NoError(err)
+
+	req := confirmLoginRequest{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
+	}
+
+	// First call consumes the auth attempt and succeeds.
+	w := ts.callConfirmLogin(req)
+	ts.Equal(http.StatusOK, w.Code)
+
+	// Second call with the same (now consumed) auth attempt must fail.
+	reusedW := ts.callConfirmLogin(req)
+	ts.NotEqual(http.StatusOK, reusedW.Code)
+
+	// Only the first call should have produced a refresh token.
+	refreshTokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(refreshTokens))
+}
