@@ -15,6 +15,10 @@ as a reference for the expected style). Apply them when writing or editing Go co
   explain the "why", not just the "what" — the codebase favors comments that capture
   design rationale and known trade-offs.
 
+## Comments
+- Do not add comments to your code, your naming of variables and functions should be used to allow the code to explain itself
+- Comments should be brief and only used for docstrings for packages and methods/functions
+
 ## Errors
 - Wrap errors with context using `fmt.Errorf("<action>: %w", err)` so the chain is
   preserved and greppable.
