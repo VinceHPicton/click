@@ -105,7 +105,6 @@ func (ts *HandlerSuite) callLogout(refreshToken string, userID string) *httptest
 
 	w := httptest.NewRecorder()
 
-	ts.server.Routes()
 	ts.server.Router.ServeHTTP(w, req)
 
 	return w

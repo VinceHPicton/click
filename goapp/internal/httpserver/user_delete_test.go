@@ -45,8 +45,6 @@ func (ts *HandlerSuite) callDelete(userID string) *httptest.ResponseRecorder {
 
 	w := httptest.NewRecorder()
 
-	ts.server.Routes()
-
 	ts.server.Router.ServeHTTP(w, req)
 
 	return w

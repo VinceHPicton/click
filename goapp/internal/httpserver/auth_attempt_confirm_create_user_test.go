@@ -147,7 +147,6 @@ func (ts *HandlerSuite) callConfirmCreateUserRaw(body any) *httptest.ResponseRec
 
 	w := httptest.NewRecorder()
 
-	ts.server.Routes()
 	ts.server.Router.ServeHTTP(w, req)
 
 	return w

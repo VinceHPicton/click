@@ -28,7 +28,6 @@ func (ts *HandlerSuite) TestStartLogin() {
 
 	w := httptest.NewRecorder()
 
-	ts.server.Routes()
 	ts.server.Router.ServeHTTP(w, req)
 
 	ts.Require().Equal(http.StatusOK, w.Code)

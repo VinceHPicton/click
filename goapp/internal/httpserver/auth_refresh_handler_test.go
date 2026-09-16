@@ -100,7 +100,6 @@ func (ts *HandlerSuite) callRefresh(refreshToken string) *httptest.ResponseRecor
 
     w := httptest.NewRecorder()
 
-	ts.server.Routes()
 	ts.server.Router.ServeHTTP(w, req)
 
     return w

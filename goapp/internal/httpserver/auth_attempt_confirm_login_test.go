@@ -172,7 +172,6 @@ func (ts *HandlerSuite) callConfirmLogin(reqStruct confirmLoginRequest) *httptes
 
 	w := httptest.NewRecorder()
 
-	ts.server.Routes()
 	ts.server.Router.ServeHTTP(w, httpReq)
 
 	return w

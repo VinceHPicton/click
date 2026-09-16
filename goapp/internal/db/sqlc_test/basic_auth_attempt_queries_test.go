@@ -25,6 +25,7 @@ func (ts *DatabaseSuite) TestCreateAuthAttempt() {
 }
 
 func (ts *DatabaseSuite) TestGetAuthAttempt() {
+	
 	var err error
 
 	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
