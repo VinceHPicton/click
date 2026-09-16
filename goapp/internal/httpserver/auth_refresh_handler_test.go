@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"time"
 	"vincehpicton/click/internal/db/factory"
 	"vincehpicton/click/internal/tokens"
 )
@@ -65,6 +66,18 @@ func (ts *HandlerSuite) TestRefreshToken_SoftDeletedUser() {
 	ts.Require().Equal(1, len(tokenRows))
 }
 
+func (ts *HandlerSuite) TestRefreshToken_ExpiredToken() {
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	expiredToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID, factory.WithExpiry(time.Now().Add(-1*time.Hour)))
+	ts.Require().NoError(err)
+
+	w := ts.callRefresh(expiredToken)
+
+	ts.Equal(http.StatusBadRequest, w.Code)
+}
+
 func (ts *HandlerSuite) TestRefreshToken_TokenDoesntExist() {
 	var err error
 	_, err = factory.FakeUser(ts.ctx, ts.server.Queries)
@@ -101,19 +114,14 @@ func (ts *HandlerSuite) TestRefreshToken_OldTokenRejectedAfterRotation() {
 	ts.Equal(http.StatusBadRequest, replay.Code)
 }
 
-// The refresh endpoint is unauthenticated, so a failure must not reveal whether
-// the token was ever real. Unknown and expired tokens share a status and body.
 func (ts *HandlerSuite) TestRefreshToken_UnknownTokenMatchesExpiredResponse() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	validToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	expiredToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID, factory.WithExpiry(time.Now().Add(-1*time.Hour)))
 	ts.Require().NoError(err)
 
-	w := ts.callRefresh(validToken)
-	ts.Require().Equal(http.StatusOK, w.Code)
-
-	wreplay := ts.callRefresh(validToken)
+	wreplay := ts.callRefresh(expiredToken)
 	unknown := ts.callRefresh("not-a-real-token")
 
 	ts.Equal(wreplay.Code, unknown.Code)
@@ -121,24 +129,24 @@ func (ts *HandlerSuite) TestRefreshToken_UnknownTokenMatchesExpiredResponse() {
 }
 
 func (ts *HandlerSuite) callRefresh(refreshToken string) *httptest.ResponseRecorder {
-    body, err := json.Marshal(refreshRequest{
-        RefreshToken: refreshToken,
-    })
-    ts.Require().NoError(err)
+	body, err := json.Marshal(refreshRequest{
+		RefreshToken: refreshToken,
+	})
+	ts.Require().NoError(err)
 
-    url, err := ts.server.Router.Get(refreshRouteName).URL()
-    ts.Require().NoError(err)
+	url, err := ts.server.Router.Get(refreshRouteName).URL()
+	ts.Require().NoError(err)
 
-    req := httptest.NewRequest(
-        http.MethodPost,
-        url.String(),
-        bytes.NewReader(body),
-    )
-    req.Header.Set("Content-Type", "application/json")
+	req := httptest.NewRequest(
+		http.MethodPost,
+		url.String(),
+		bytes.NewReader(body),
+	)
+	req.Header.Set("Content-Type", "application/json")
 
-    w := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
 	ts.server.Router.ServeHTTP(w, req)
 
-    return w
+	return w
 }
