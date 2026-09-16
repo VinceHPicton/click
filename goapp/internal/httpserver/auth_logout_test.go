@@ -8,6 +8,7 @@ import (
 	"time"
 	"vincehpicton/click/internal/db/factory"
 	"vincehpicton/click/internal/db/sqlc"
+	"vincehpicton/click/internal/tokens"
 )
 
 func (ts *HandlerSuite) TestLogout() {
@@ -108,4 +109,33 @@ func (ts *HandlerSuite) callLogout(refreshToken string, userID string) *httptest
 	ts.server.Router.ServeHTTP(w, req)
 
 	return w
+}
+
+// TestLogout_InvalidRefreshToken covers the 401 from the auth middleware. This
+// covers the case past it: a caller who is authenticated but presents a refresh
+// token that was never issued.
+func (ts *HandlerSuite) TestLogout_AuthenticatedWithUnknownRefreshToken() {
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	unknownToken, err := tokens.GenerateRefreshToken()
+	ts.Require().NoError(err)
+
+	w := ts.callLogout(unknownToken, user.ID.String())
+	ts.Equal(http.StatusBadRequest, w.Code)
+}
+
+// Logging out twice with the same token is a client bug, not a server error.
+func (ts *HandlerSuite) TestLogout_SecondLogoutRejected() {
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	ts.Require().NoError(err)
+
+	first := ts.callLogout(refreshToken, user.ID.String())
+	ts.Require().Equal(http.StatusOK, first.Code)
+
+	second := ts.callLogout(refreshToken, user.ID.String())
+	ts.Equal(http.StatusBadRequest, second.Code)
 }

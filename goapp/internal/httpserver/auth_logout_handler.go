@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"net/http"
-	"vincehpicton/click/internal/tokens"
 )
 
 type logoutRequest struct {
@@ -10,28 +9,19 @@ type logoutRequest struct {
 }
 
 func (s *Server) logoutHandler() http.HandlerFunc {
-	type response struct {
-	}
-	return func(w http.ResponseWriter, r *http.Request) {
+	service := s.service()
 
+	return func(w http.ResponseWriter, r *http.Request) {
 		req, ok := decodeJSON[logoutRequest](w, r)
 		if !ok {
 			return
 		}
 
-		hash := tokens.HashRefreshToken(req.RefreshToken)
-		token, err := s.Queries.GetValidTokenByHash(r.Context(), hash)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Invalid refresh token"))
+		if err := service.Logout(r.Context(), req.RefreshToken); err != nil {
+			writeError(w, err)
 			return
 		}
 
-		_, err = s.Queries.RevokeRefreshTokenByID(r.Context(), token.ID)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to revoke refresh token"))
-			return
-		}
+		w.WriteHeader(http.StatusOK)
 	}
 }

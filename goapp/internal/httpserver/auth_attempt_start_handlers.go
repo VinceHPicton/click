@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -13,10 +12,7 @@ type authAttemptStartRequest struct {
 }
 
 func (r authAttemptStartRequest) Valid() bool {
-	if len(r.Mobile) == 0 {
-		return false
-	}
-	return true
+	return len(r.Mobile) > 0
 }
 
 type authAttemptStartResponse struct {
@@ -26,36 +22,25 @@ type authAttemptStartResponse struct {
 
 func (s *Server) authAttemptStartLoginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		createAuthAttemptParams, ok := decodeJSON[authAttemptStartRequest](w, r)
+		req, ok := decodeJSON[authAttemptStartRequest](w, r)
 		if !ok {
 			return
 		}
 
-		authAttempt, err := s.Queries.AuthAttemptCreate(r.Context(), createAuthAttemptParams.Mobile)
+		attempt, err := s.Queries.AuthAttemptCreate(r.Context(), req.Mobile)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeError(w, err)
 			return
 		}
 
-		resp := authAttemptStartResponse{
-			ID:          authAttempt.ID,
-			OneTimeCode: strconv.Itoa(int(authAttempt.OneTimeCode)),
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(resp)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to encode response"))
-			return
-		}
+		writeJSON(w, http.StatusOK, authAttemptStartResponse{
+			ID:          attempt.ID,
+			OneTimeCode: strconv.Itoa(int(attempt.OneTimeCode)),
+		})
 	}
 }
 
 func (s *Server) authAttemptStartCreateUserHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// For now, literally just calling the other one, in future we will probably have these diverge in some way
-		s.authAttemptStartLoginHandler()(w, r)
-	}
+	// For now, literally just calling the other one, in future we will probably have these diverge in some way
+	return s.authAttemptStartLoginHandler()
 }

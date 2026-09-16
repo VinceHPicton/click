@@ -1,85 +1,36 @@
 package httpserver
 
 import (
-	"encoding/json"
 	"net/http"
-	"vincehpicton/click/internal/db/sqlc"
-	"vincehpicton/click/internal/tokens"
 )
 
 type refreshRequest struct {
 	RefreshToken string `json:"refreshToken"`
 }
+
 type refreshResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
 
 func (s *Server) refreshHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	service := s.service()
 
+	return func(w http.ResponseWriter, r *http.Request) {
 		req, ok := decodeJSON[refreshRequest](w, r)
 		if !ok {
 			return
 		}
 
-		hash := tokens.HashRefreshToken(req.RefreshToken)
-		token, err := s.Queries.GetValidTokenByHash(r.Context(), hash)
+		session, err := service.RefreshSession(r.Context(), req.RefreshToken)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			writeError(w, err)
 			return
 		}
 
-		user, err := s.Queries.GetUser(r.Context(), token.UserID)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		if user.BannedAt.Valid {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		if user.DeletedAt.Valid {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		newRefreshToken, err := tokens.GenerateRefreshToken()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		p := sqlc.RotateRefreshTokenParams{
-			UserID:       user.ID,
-			OldTokenHash: hash,
-			NewTokenHash: tokens.HashRefreshToken(newRefreshToken),
-		}
-
-		_, err = s.Queries.RotateRefreshToken(r.Context(), p)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Failed to rotate refresh token"))
-			return
-		}
-
-		accessToken, err := s.TokenManager.GenerateAccessToken(user.ID.String())
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		resp := refreshResponse{
-			AccessToken:  accessToken,
-			RefreshToken: newRefreshToken,
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(resp)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		writeJSON(w, http.StatusOK, refreshResponse{
+			AccessToken:  session.AccessToken,
+			RefreshToken: session.RefreshToken,
+		})
 	}
 }

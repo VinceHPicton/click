@@ -45,6 +45,14 @@ func writeError(w http.ResponseWriter, err error) {
 	case errors.Is(err, service.ErrUserExists):
 		http.Error(w, "account already exists", http.StatusBadRequest)
 
+	case errors.Is(err, service.ErrInvalidRefreshToken), errors.Is(err, service.ErrUserDeleted):
+		// 400 rather than 401: the caller should stop retrying and start a new
+		// auth attempt, not re-present credentials.
+		http.Error(w, "invalid or expired refresh token", http.StatusBadRequest)
+
+	case errors.Is(err, service.ErrUserBanned):
+		http.Error(w, "account is not permitted to sign in", http.StatusUnauthorized)
+
 	default:
 		log.Printf("httpserver: unhandled error: %v", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
