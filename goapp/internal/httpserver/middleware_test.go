@@ -240,6 +240,7 @@ func TestAuthMiddleware_InvalidUUID(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 	request := httptest.NewRequest(http.MethodGet, "/users", nil)
+	request.Header.Set("Authorization", "Bearer invalid-uuid-token")
 	recorder := httptest.NewRecorder()
 
 	tokenMgr, err := tokens.New("super-secret-code")

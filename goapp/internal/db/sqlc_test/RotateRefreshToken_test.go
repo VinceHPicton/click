@@ -39,6 +39,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken() {
 	ts.Require().Error(err)
 
 	oldTokenTBItem, err := ts.queries.GetTokenByHash(ts.ctx, oldToken.TokenHash)
+	ts.NoError(err)
 	ts.Equal(user.ID, oldTokenTBItem.UserID)
 	ts.True(oldTokenTBItem.RevokedAt.Valid)
 }
@@ -75,6 +76,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_SucceedsIfExpiredInFuture() {
 	ts.Require().Error(err)
 
 	oldTokenTBItem, err := ts.queries.GetTokenByHash(ts.ctx, token.TokenHash)
+	ts.NoError(err)
 	ts.Equal(user.ID, oldTokenTBItem.UserID)
 	ts.True(oldTokenTBItem.RevokedAt.Valid)
 }

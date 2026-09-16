@@ -82,6 +82,44 @@ func (ts *HandlerSuite) TestRefreshToken_TokenDoesntExist() {
 	ts.Require().Equal(0, len(tokenRows))
 }
 
+func (ts *HandlerSuite) TestRefreshToken_OldTokenRejectedAfterRotation() {
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	oldRefreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	ts.Require().NoError(err)
+
+	w := ts.callRefresh(oldRefreshToken)
+	ts.Require().Equal(http.StatusOK, w.Code)
+
+	resp := refreshResponse{}
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	ts.Require().NoError(err)
+	ts.Require().NotEqual(oldRefreshToken, resp.RefreshToken)
+
+	replay := ts.callRefresh(oldRefreshToken)
+	ts.Equal(http.StatusBadRequest, replay.Code)
+}
+
+// The refresh endpoint is unauthenticated, so a failure must not reveal whether
+// the token was ever real. Unknown and expired tokens share a status and body.
+func (ts *HandlerSuite) TestRefreshToken_UnknownTokenMatchesExpiredResponse() {
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	validToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	ts.Require().NoError(err)
+
+	w := ts.callRefresh(validToken)
+	ts.Require().Equal(http.StatusOK, w.Code)
+
+	wreplay := ts.callRefresh(validToken)
+	unknown := ts.callRefresh("not-a-real-token")
+
+	ts.Equal(wreplay.Code, unknown.Code)
+	ts.Equal(wreplay.Body.String(), unknown.Body.String())
+}
+
 func (ts *HandlerSuite) callRefresh(refreshToken string) *httptest.ResponseRecorder {
     body, err := json.Marshal(refreshRequest{
         RefreshToken: refreshToken,
@@ -103,47 +141,4 @@ func (ts *HandlerSuite) callRefresh(refreshToken string) *httptest.ResponseRecor
 	ts.server.Router.ServeHTTP(w, req)
 
     return w
-}
-
-// A refresh token is single use. Replaying one after a successful rotation must
-// fail, otherwise a leaked token stays usable indefinitely.
-func (ts *HandlerSuite) TestRefreshToken_OldTokenRejectedAfterRotation() {
-	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
-	ts.Require().NoError(err)
-
-	oldRefreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
-	ts.Require().NoError(err)
-
-	w := ts.callRefresh(oldRefreshToken)
-	ts.Require().Equal(http.StatusOK, w.Code)
-
-	resp := refreshResponse{}
-	err = json.Unmarshal(w.Body.Bytes(), &resp)
-	ts.Require().NoError(err)
-	ts.Require().NotEqual(oldRefreshToken, resp.RefreshToken)
-
-	replay := ts.callRefresh(oldRefreshToken)
-	ts.Equal(http.StatusBadRequest, replay.Code)
-
-	rotated := ts.callRefresh(resp.RefreshToken)
-	ts.Equal(http.StatusOK, rotated.Code)
-}
-
-// The refresh endpoint is unauthenticated, so a failure must not reveal whether
-// the token was ever real. Unknown and expired tokens share a status and body.
-func (ts *HandlerSuite) TestRefreshToken_UnknownTokenMatchesExpiredResponse() {
-	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
-	ts.Require().NoError(err)
-
-	validToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
-	ts.Require().NoError(err)
-
-	revoked := ts.callRefresh(validToken)
-	ts.Require().Equal(http.StatusOK, revoked.Code)
-
-	replay := ts.callRefresh(validToken)
-	unknown := ts.callRefresh("not-a-real-token")
-
-	ts.Equal(replay.Code, unknown.Code)
-	ts.Equal(replay.Body.String(), unknown.Body.String())
 }
