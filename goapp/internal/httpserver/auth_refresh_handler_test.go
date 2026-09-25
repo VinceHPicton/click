@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"time"
+
 	"vincehpicton/click/internal/db/factory"
+	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/tokens"
 )
 
@@ -149,4 +152,89 @@ func (ts *HandlerSuite) callRefresh(refreshToken string) *httptest.ResponseRecor
 	ts.server.Router.ServeHTTP(w, req)
 
 	return w
+}
+
+// The refresh endpoint is unauthenticated, so an expired token and a token that
+// never existed must be indistinguishable. Otherwise a caller can probe which
+// token values were once real.
+func (ts *HandlerSuite) TestRefreshToken_ExpiredTokenMatchesUnknownResponse() {
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	refreshToken, dbToken, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.SetRefreshTokenExpiryByID(ts.ctx, sqlc.SetRefreshTokenExpiryByIDParams{
+		ID:        dbToken.ID,
+		ExpiresAt: time.Now().Add(-24 * time.Hour),
+	})
+	ts.Require().NoError(err)
+
+	expired := ts.callRefresh(refreshToken)
+	unknown := ts.callRefresh("not-a-real-token")
+
+	ts.Equal(http.StatusBadRequest, expired.Code)
+	ts.Equal(expired.Code, unknown.Code)
+	ts.Equal(expired.Body.String(), unknown.Body.String())
+}
+
+// RefreshSession leans on RotateRefreshToken being a single statement: the
+// losing caller's UPDATE re-checks revoked_at IS NULL after the row lock clears,
+// matches nothing, and the insert is skipped. Without that, two callers racing
+// with one leaked token would both walk away with a live session.
+func (ts *HandlerSuite) TestRefreshToken_ConcurrentUseIssuesOneSession() {
+	const callers = 4
+
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	refreshToken, _, err := factory.FakeRefreshToken(ts.ctx, ts.server.Queries, user.ID)
+	ts.Require().NoError(err)
+
+	body, err := json.Marshal(refreshRequest{RefreshToken: refreshToken})
+	ts.Require().NoError(err)
+	target := ts.routeURL(refreshRouteName)
+
+	recorders := make([]*httptest.ResponseRecorder, callers)
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+
+	for i := range recorders {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			req := httptest.NewRequest(http.MethodPost, target, bytes.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			<-start
+			ts.server.Router.ServeHTTP(w, req)
+			recorders[i] = w
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+
+	accepted := 0
+	for _, w := range recorders {
+		switch w.Code {
+		case http.StatusOK:
+			accepted++
+		case http.StatusBadRequest:
+		default:
+			ts.Failf("unexpected refresh status", "got %d: %s", w.Code, w.Body.String())
+		}
+	}
+	ts.Equal(1, accepted, "exactly one concurrent refresh may succeed")
+
+	tokenRows, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Len(tokenRows, 2, "the original plus exactly one replacement")
+
+	live := 0
+	for _, row := range tokenRows {
+		if !row.RevokedAt.Valid {
+			live++
+		}
+	}
+	ts.Equal(1, live, "exactly one live refresh token may remain")
 }

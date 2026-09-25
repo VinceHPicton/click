@@ -151,3 +151,42 @@ func (ts *HandlerSuite) callConfirmCreateUserRaw(body any) *httptest.ResponseRec
 
 	return w
 }
+
+// writeError's default branch exists because handlers used to pass err.Error()
+// straight to the client, leaking raw Postgres text. A banned user reaches that
+// branch: the active-user lookup filters banned_at, so the insert proceeds and
+// trips users_phone_unique_active. The body must stay generic.
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_InternalErrorDoesNotLeakDatabaseDetail() {
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.BanUser(ts.ctx, fakeUser.ID)
+	ts.Require().NoError(err)
+
+	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.Require().Equal(http.StatusInternalServerError, w.Code)
+
+	body := w.Body.String()
+	ts.Equal("internal server error\n", body)
+	for _, leak := range []string{"app.users", "users_phone_unique_active", "duplicate key", "SQLSTATE", "23505"} {
+		ts.NotContains(body, leak)
+	}
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_ExistingUserErrorDoesNotLeakDatabaseDetail() {
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.Require().Equal(http.StatusBadRequest, w.Code)
+
+	body := w.Body.String()
+	ts.Equal("account already exists\n", body)
+	ts.NotContains(body, fakeUser.Mobile)
+}

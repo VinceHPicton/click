@@ -1,7 +1,7 @@
 package sqlc_test
 
 import (
-	"database/sql"
+	"time"
 	"vincehpicton/click/internal/db/factory"
 	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/tokens"
@@ -52,7 +52,10 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_SucceedsIfExpiredInFuture() {
 	_, token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
-	err = expireTokenTomorrow(ts.db.Pool, token.ID)
+	err = ts.queries.SetRefreshTokenExpiryByID(ts.ctx, sqlc.SetRefreshTokenExpiryByIDParams{
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+		ID:        token.ID,
+	})
 	ts.Require().NoError(err)
 
 	newRefreshToken, err := tokens.GenerateRefreshToken()
@@ -116,7 +119,7 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_FailsIfRevoked() {
 	_, token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
-	err = revokeToken(ts.db.Pool, token.ID)
+	_, err = ts.queries.RevokeRefreshTokenByID(ts.ctx, token.ID)
 	ts.Require().NoError(err)
 
 	rotateParams := sqlc.RotateRefreshTokenParams{
@@ -141,7 +144,10 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_FailsIfExpiredInPast() {
 	_, token, err := factory.FakeRefreshToken(ts.ctx, ts.queries, user.ID)
 	ts.Require().NoError(err)
 
-	err = expireTokenYesterday(ts.db.Pool, token.ID)
+	err = ts.queries.SetRefreshTokenExpiryByID(ts.ctx, sqlc.SetRefreshTokenExpiryByIDParams{
+		ExpiresAt: time.Now().Add(-24 * time.Hour),
+		ID:        token.ID,
+	})
 	ts.Require().NoError(err)
 
 	rotateParams := sqlc.RotateRefreshTokenParams{
@@ -156,31 +162,4 @@ func (ts *DatabaseSuite) TestRotateRefreshToken_FailsIfExpiredInPast() {
 	tokenRows, err := ts.queries.GetRefreshTokens(ts.ctx)
 	ts.Require().NoError(err)
 	ts.Require().Equal(1, len(tokenRows))
-}
-
-func revokeToken(db *sql.DB, id uuid.UUID) error {
-	_, err := db.Exec(`
-        UPDATE app.refresh_tokens
-        SET revoked_at = NOW()
-        WHERE id = $1
-    `, id)
-	return err
-}
-
-func expireTokenYesterday(db *sql.DB, id uuid.UUID) error {
-	_, err := db.Exec(`
-        UPDATE app.refresh_tokens
-        SET expires_at = NOW() - INTERVAL '1 day'
-        WHERE id = $1
-    `, id)
-	return err
-}
-
-func expireTokenTomorrow(db *sql.DB, id uuid.UUID) error {
-	_, err := db.Exec(`
-        UPDATE app.refresh_tokens
-        SET expires_at = NOW() + INTERVAL '1 day'
-        WHERE id = $1
-    `, id)
-	return err
 }

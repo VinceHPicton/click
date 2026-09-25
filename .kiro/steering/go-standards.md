@@ -17,7 +17,8 @@ as a reference for the expected style). Apply them when writing or editing Go co
 
 ## Comments
 - Do not add comments to your code, your naming of variables and functions should be used to allow the code to explain itself
-- Comments should be brief and only used for docstrings for packages and methods/functions
+- Comments should be brief and only used for docstrings for packages and methods/functions, docstrings should only be used where they genuinely add value which good naming does not already provide
+- Where you add a docstring comment to explain to me (the human engineer) something you've done, start your comment with "-- AI EXPLANATION FOR DEV --"
 
 ## Errors
 - Wrap errors with context using `fmt.Errorf("<action>: %w", err)` so the chain is
@@ -30,6 +31,7 @@ as a reference for the expected style). Apply them when writing or editing Go co
 ## Data access
 - All DB access goes through generated sqlc `*Queries`. Do not hand-write SQL execution
   in Go and do not edit `internal/db/sqlc`.
+- Do not write SQL queries as string literals, only edit or add to /db/migrations, after which you must run `make` in root to regenerate Go code.
 - For multi-write flows that must be atomic, open a transaction and pass a
   transaction-scoped `*sqlc.Queries` into helpers, matching the pattern in `auth`.
 - When ordering matters for correctness or security (e.g. consume-then-check for
