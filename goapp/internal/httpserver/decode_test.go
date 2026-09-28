@@ -51,7 +51,7 @@ func (ts *HandlerSuite) TestDecodeJSON_UnknownFieldRejectedOnConfirmLogin() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	body := []byte(fmt.Sprintf(
@@ -70,7 +70,7 @@ func (ts *HandlerSuite) TestDecodeJSON_UnknownFieldRejectedOnConfirmLogin() {
 }
 
 func (ts *HandlerSuite) TestDecodeJSON_UnknownFieldRejectedOnConfirmCreateUser() {
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
 	ts.Require().NoError(err)
 
 	body := []byte(fmt.Sprintf(

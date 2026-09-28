@@ -14,7 +14,7 @@ func (ts *HandlerSuite) TestConfirmLogin() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	req := confirmLoginRequest{
@@ -45,7 +45,7 @@ func (ts *HandlerSuite) TestConfirmLogin_ThenRefresh() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	req := confirmLoginRequest{
@@ -86,7 +86,7 @@ func (ts *HandlerSuite) TestConfirmLogin_UserDoesntExist() {
 	var err error
 	const randomMobile = "+447840195452"
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, randomMobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, randomMobile)
 	ts.Require().NoError(err)
 
 	req := confirmLoginRequest{
@@ -112,7 +112,7 @@ func (ts *HandlerSuite) TestConfirmLogin_UserBanned() {
 	err = ts.server.Queries.BanUser(ts.ctx, user.ID)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	req := confirmLoginRequest{
@@ -139,7 +139,7 @@ func (ts *HandlerSuite) TestConfirmLogin_UserDeleted() {
 	err = ts.server.Queries.SoftDeleteUser(ts.ctx, user.ID)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	req := confirmLoginRequest{
@@ -183,7 +183,7 @@ func (ts *HandlerSuite) TestConfirmLogin_ConsumedAttemptReused() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	req := confirmLoginRequest{

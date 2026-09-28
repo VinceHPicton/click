@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"vincehpicton/click/internal/db/factory"
 	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/service"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func (ts *DatabaseSuite) TestGetValidAuthAttempt_AcceptsAttemptInsideWindow() {
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	fiveSecondsInsideWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(time.Second * 5)
@@ -27,7 +28,7 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt_AcceptsAttemptInsideWindow() {
 }
 
 func (ts *DatabaseSuite) TestGetValidAuthAttempt_RejectsAttemptOutsideWindow() {
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(-time.Second * 5)
@@ -45,7 +46,7 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt_RejectsAttemptOutsideWindow() {
 }
 
 func (ts *DatabaseSuite) TestGetValidAuthAttempt_RejectsAlreadyUsedAttempt() {
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	err = ts.queries.ConsumeAuthAttempt(ts.ctx, attempt.ID)
@@ -60,7 +61,7 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt_RejectsAlreadyUsedAttempt() {
 // is what makes consumption idempotent, so a replay cannot refresh the stamp
 // and buy another two minutes of validity.
 func (ts *DatabaseSuite) TestConsumeAuthAttempt_RefusesAlreadyUsedAttempt() {
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	err = setAuthAttemptUsedAt(ts.ctx, ts.queries, attempt.ID, time.Now().Add(-time.Hour))
@@ -79,7 +80,7 @@ func (ts *DatabaseSuite) TestConsumeAuthAttempt_RefusesAlreadyUsedAttempt() {
 }
 
 func (ts *DatabaseSuite) TestConsumeAuthAttempt_HasNoFreshnessGuard() {
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	oneHourAgo := time.Now().Add(-time.Hour)
@@ -96,7 +97,7 @@ func (ts *DatabaseSuite) TestConsumeAuthAttempt_HasNoFreshnessGuard() {
 }
 
 func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAlreadyUsedAttempt() {
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	oneHourAgo := time.Now().Add(-time.Hour)
@@ -116,7 +117,7 @@ func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAlreadyUsedAttempt()
 }
 
 func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAttemptOutsideWindow() {
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(-time.Second * 5)

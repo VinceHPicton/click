@@ -12,7 +12,7 @@ func (ts *HandlerSuite) TestConfirmLogin_WrongCodeRejected() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	w := ts.callConfirmLogin(confirmLoginRequest{
@@ -33,7 +33,7 @@ func (ts *HandlerSuite) TestConfirmLogin_WrongCodeStillConsumesAttempt() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	wrong := ts.callConfirmLogin(confirmLoginRequest{
@@ -62,7 +62,7 @@ func (ts *HandlerSuite) TestConfirmLogin_WrongCodeIndistinguishableFromUnknownAt
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	wrongCode := ts.callConfirmLogin(confirmLoginRequest{
@@ -80,7 +80,7 @@ func (ts *HandlerSuite) TestConfirmLogin_WrongCodeIndistinguishableFromUnknownAt
 }
 
 func (ts *HandlerSuite) TestConfirmCreateUser_WrongCodeRejected() {
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
 	ts.Require().NoError(err)
 
 	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode+1)
@@ -92,7 +92,7 @@ func (ts *HandlerSuite) TestConfirmCreateUser_WrongCodeRejected() {
 }
 
 func (ts *HandlerSuite) TestConfirmCreateUser_WrongCodeStillConsumesAttempt() {
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
 	ts.Require().NoError(err)
 
 	wrong := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode+1)
@@ -109,7 +109,7 @@ func (ts *HandlerSuite) TestConfirmCreateUser_WrongCodeStillConsumesAttempt() {
 }
 
 func (ts *HandlerSuite) TestConfirmCreateUser_WrongCodeIndistinguishableFromUnknownAttempt() {
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
 	ts.Require().NoError(err)
 
 	wrongCode := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode+1)

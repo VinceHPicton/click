@@ -14,7 +14,7 @@ func (ts *HandlerSuite) TestConfirmLogin_ExpiredAttemptRejected() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	ts.setAuthAttemptCreatedAt(authAttempt.ID, authAttempt.CreatedAt.Time.Add(-130*time.Second))
@@ -35,7 +35,7 @@ func (ts *HandlerSuite) TestConfirmLogin_AttemptInsideWindowAccepted() {
 	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, user.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
 	ts.Require().NoError(err)
 
 	ts.setAuthAttemptCreatedAt(authAttempt.ID, authAttempt.CreatedAt.Time.Add(-110*time.Second))
@@ -48,7 +48,7 @@ func (ts *HandlerSuite) TestConfirmLogin_AttemptInsideWindowAccepted() {
 }
 
 func (ts *HandlerSuite) TestConfirmCreateUser_ExpiredAttemptRejected() {
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
 	ts.Require().NoError(err)
 
 	ts.setAuthAttemptCreatedAt(authAttempt.ID, authAttempt.CreatedAt.Time.Add(-130*time.Second))
@@ -62,7 +62,7 @@ func (ts *HandlerSuite) TestConfirmCreateUser_ExpiredAttemptRejected() {
 }
 
 func (ts *HandlerSuite) TestConfirmCreateUser_AttemptInsideWindowAccepted() {
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
 	ts.Require().NoError(err)
 
 	ts.setAuthAttemptCreatedAt(authAttempt.ID, authAttempt.CreatedAt.Time.Add(-110*time.Second))

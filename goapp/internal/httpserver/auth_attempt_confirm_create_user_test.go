@@ -12,7 +12,7 @@ import (
 
 func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_Success() {
 	// Create an auth attempt first
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195455")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
 	ts.Require().NoError(err)
 
 	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
@@ -46,7 +46,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists_Attem
 	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
 	ts.Require().NoError(err)
 
 	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
@@ -67,7 +67,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserBanned_AttemptStill
 	err = ts.server.Queries.BanUser(ts.ctx, fakeUser.ID)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
 	ts.Require().NoError(err)
 
 	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
@@ -85,7 +85,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserSoftDeleted_Success
 	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
 	ts.Require().NoError(err)
 
 	ts.server.Queries.SoftDeleteUser(ts.ctx, fakeUser.ID)
@@ -107,7 +107,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserSoftDeleted_Success
 }
 
 func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_ConsumedAttemptReused() {
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, "+447840195456")
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195456")
 	ts.Require().NoError(err)
 
 	// First call consumes the auth attempt and creates the user.
@@ -163,7 +163,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_InternalErrorDoesNotLea
 	err = ts.server.Queries.BanUser(ts.ctx, fakeUser.ID)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
 	ts.Require().NoError(err)
 
 	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
@@ -180,7 +180,7 @@ func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_ExistingUserErrorDoesNo
 	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
 	ts.Require().NoError(err)
 
-	authAttempt, err := ts.server.Queries.AuthAttemptCreate(ts.ctx, fakeUser.Mobile)
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
 	ts.Require().NoError(err)
 
 	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)

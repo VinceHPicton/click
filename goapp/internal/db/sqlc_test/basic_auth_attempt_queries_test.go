@@ -3,6 +3,7 @@ package sqlc_test
 import (
 	"database/sql"
 	"errors"
+	"vincehpicton/click/internal/db/factory"
 
 	"github.com/google/uuid"
 )
@@ -14,7 +15,7 @@ const (
 func (ts *DatabaseSuite) TestCreateAuthAttempt() {
 	var err error
 
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 	ts.Require().LessOrEqual(int32(100000), attempt.OneTimeCode)
 	ts.Require().GreaterOrEqual(int32(999999), attempt.OneTimeCode)
@@ -28,7 +29,7 @@ func (ts *DatabaseSuite) TestGetAuthAttempt() {
 
 	var err error
 
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	getAttempt, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
@@ -39,7 +40,7 @@ func (ts *DatabaseSuite) TestGetAuthAttempt() {
 func (ts *DatabaseSuite) TestGetValidAuthAttempt() {
 	var err error
 
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	getAttempt, err := ts.queries.GetValidAuthAttempt(ts.ctx, attempt.ID)
@@ -57,7 +58,7 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt_DoesntExist() {
 func (ts *DatabaseSuite) TestConsumeValidAuthAttempt() {
 	var err error
 
-	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
+	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
 
 	err = ts.queries.ConsumeValidAuthAttempt(ts.ctx, attempt.ID)
