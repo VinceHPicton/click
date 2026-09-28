@@ -1,9 +1,10 @@
 -- name: AuthAttemptCreate :one
-
 INSERT INTO app.auth_attempts (
-  mobile
+  mobile,
+  expires_at
 ) VALUES (
-  $1
+  $1,
+  $2
 )
 RETURNING *;
 
