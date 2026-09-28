@@ -2,16 +2,13 @@ package httpserver
 
 import (
 	"bytes"
-	"database/sql"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"vincehpicton/click/internal/db/sqlc"
 	"vincehpicton/click/internal/tokens"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,17 +45,6 @@ func (ts *HandlerSuite) postJSONAs(target string, body []byte, userID string) *h
 		"Content-Type":  "application/json",
 		"Authorization": "Bearer " + ts.accessTokenFor(userID),
 	})
-}
-
-// The offset is applied to the created_at Postgres assigned, so the validity
-// window assertions do not depend on the Go process and the database container
-// agreeing on the current time.
-func (ts *HandlerSuite) setAuthAttemptCreatedAt(id uuid.UUID, createdAt time.Time) {
-	err := ts.server.Queries.SetAuthAttemptCreatedAt(ts.ctx, sqlc.SetAuthAttemptCreatedAtParams{
-		ID:        id,
-		CreatedAt: sql.NullTime{Time: createdAt, Valid: true},
-	})
-	ts.Require().NoError(err)
 }
 
 func (ts *HandlerSuite) onlyAuthAttempt() sqlc.AppAuthAttempt {

@@ -29,7 +29,7 @@ WHERE id = $1;
 SELECT * FROM app.auth_attempts
 WHERE id = $1
 AND used_at IS NULL
-AND created_at >= NOW() - INTERVAL '2 minutes';
+AND expires_at > NOW();
 
 -- name: ConsumeAuthAttempt :exec
 UPDATE app.auth_attempts

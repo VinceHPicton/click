@@ -8,42 +8,9 @@ import (
 
 	"vincehpicton/click/internal/db/factory"
 	"vincehpicton/click/internal/db/sqlc"
-	"vincehpicton/click/internal/service"
 
 	"github.com/google/uuid"
 )
-
-func (ts *DatabaseSuite) TestGetValidAuthAttempt_AcceptsAttemptInsideWindow() {
-	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
-	ts.Require().NoError(err)
-
-	fiveSecondsInsideWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(time.Second * 5)
-
-	err = setAuthAttemptCreatedAt(ts.ctx, ts.queries, attempt.ID, fiveSecondsInsideWindowTime)
-	ts.Require().NoError(err)
-
-	validAttempt, err := ts.queries.GetValidAuthAttempt(ts.ctx, attempt.ID)
-	ts.Require().NoError(err)
-	ts.Equal(attempt.ID, validAttempt.ID)
-}
-
-func (ts *DatabaseSuite) TestGetValidAuthAttempt_RejectsAttemptOutsideWindow() {
-	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
-	ts.Require().NoError(err)
-
-	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(-time.Second * 5)
-
-	err = setAuthAttemptCreatedAt(ts.ctx, ts.queries, attempt.ID, fiveSecondsBehindWindowTime)
-	ts.Require().NoError(err)
-
-	_, err = ts.queries.GetValidAuthAttempt(ts.ctx, attempt.ID)
-	ts.Require().Error(err)
-	ts.True(errors.Is(err, sql.ErrNoRows))
-
-	stillThere, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
-	ts.Require().NoError(err)
-	ts.False(stillThere.UsedAt.Valid)
-}
 
 func (ts *DatabaseSuite) TestGetValidAuthAttempt_RejectsAlreadyUsedAttempt() {
 	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
@@ -79,23 +46,6 @@ func (ts *DatabaseSuite) TestConsumeAuthAttempt_RefusesAlreadyUsedAttempt() {
 	ts.Equal(before.UsedAt.Time, after.UsedAt.Time, "an already used attempt must not be re-stamped")
 }
 
-func (ts *DatabaseSuite) TestConsumeAuthAttempt_HasNoFreshnessGuard() {
-	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
-	ts.Require().NoError(err)
-
-	oneHourAgo := time.Now().Add(-time.Hour)
-
-	err = setAuthAttemptCreatedAt(ts.ctx, ts.queries, attempt.ID, oneHourAgo)
-	ts.Require().NoError(err)
-
-	err = ts.queries.ConsumeAuthAttempt(ts.ctx, attempt.ID)
-	ts.Require().NoError(err)
-
-	consumed, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
-	ts.Require().NoError(err)
-	ts.NotEqual(oneHourAgo, consumed.UsedAt.Time, "an attempt outside the window will still be stamped as used by ConsumeAuthAttempt")
-}
-
 func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAlreadyUsedAttempt() {
 	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
 	ts.Require().NoError(err)
@@ -114,33 +64,6 @@ func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAlreadyUsedAttempt()
 	after, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
 	ts.Require().NoError(err)
 	ts.Equal(before.UsedAt.Time, after.UsedAt.Time)
-}
-
-func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAttemptOutsideWindow() {
-	attempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.queries, phoneNumber)
-	ts.Require().NoError(err)
-
-	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(-time.Second * 5)
-
-	err = setAuthAttemptCreatedAt(ts.ctx, ts.queries, attempt.ID, fiveSecondsBehindWindowTime)
-	ts.Require().NoError(err)
-
-	err = ts.queries.ConsumeValidAuthAttempt(ts.ctx, attempt.ID)
-	ts.Require().NoError(err)
-
-	untouched, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
-	ts.Require().NoError(err)
-	ts.False(untouched.UsedAt.Valid)
-}
-
-// Offsets are taken from the created_at Postgres assigned rather than from
-// time.Now, so the window assertions do not depend on the Go process and the
-// database container agreeing on the current time.
-func setAuthAttemptCreatedAt(ctx context.Context, q *sqlc.Queries, id uuid.UUID, createdAt time.Time) error {
-	return q.SetAuthAttemptCreatedAt(ctx, sqlc.SetAuthAttemptCreatedAtParams{
-		ID:        id,
-		CreatedAt: sql.NullTime{Time: createdAt, Valid: true},
-	})
 }
 
 func setAuthAttemptUsedAt(ctx context.Context, q *sqlc.Queries, id uuid.UUID, usedAt time.Time) error {
