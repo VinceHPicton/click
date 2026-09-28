@@ -41,8 +41,8 @@ AND used_at IS NULL;
 UPDATE app.auth_attempts
 SET used_at = NOW()
 WHERE id = $1
-  AND used_at IS NULL
-  AND created_at >= NOW() - INTERVAL '2 minutes';
+AND used_at IS NULL
+AND expires_at > NOW();
 
 -- Test support.
 -- name: SetAuthAttemptCreatedAt :exec
