@@ -36,7 +36,7 @@ SET used_at = NOW()
 WHERE id = sqlc.arg(id)
 AND used_at IS NULL;
 
--- name: ConsumeAuthAttemptByID :exec
+-- name: ConsumeValidAuthAttempt :exec
 UPDATE app.auth_attempts
 SET used_at = NOW()
 WHERE id = $1

@@ -25,7 +25,7 @@ func (ts *DatabaseSuite) TestCreateAuthAttempt() {
 }
 
 func (ts *DatabaseSuite) TestGetAuthAttempt() {
-	
+
 	var err error
 
 	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
@@ -54,13 +54,13 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt_DoesntExist() {
 	ts.True(errors.Is(err, sql.ErrNoRows))
 }
 
-func (ts *DatabaseSuite) TestConsumeAuthAttemptByID() {
+func (ts *DatabaseSuite) TestConsumeValidAuthAttempt() {
 	var err error
 
 	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
 	ts.Require().NoError(err)
 
-	err = ts.queries.ConsumeAuthAttemptByID(ts.ctx, attempt.ID)
+	err = ts.queries.ConsumeValidAuthAttempt(ts.ctx, attempt.ID)
 	ts.Require().NoError(err)
 
 	consumedAttempt, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
@@ -71,6 +71,6 @@ func (ts *DatabaseSuite) TestConsumeAuthAttemptByID() {
 func (ts *DatabaseSuite) TestSQLCExecDoesNotErrorIfNoRowsAffected() {
 	var err error
 
-	err = ts.queries.ConsumeAuthAttemptByID(ts.ctx, uuid.New())
+	err = ts.queries.ConsumeValidAuthAttempt(ts.ctx, uuid.New())
 	ts.Require().NoError(err)
 }

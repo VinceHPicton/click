@@ -16,7 +16,7 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt_AcceptsAttemptInsideWindow() {
 	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
 	ts.Require().NoError(err)
 
-	fiveSecondsInsideWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes*time.Minute).Add(time.Second*5)
+	fiveSecondsInsideWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(time.Second * 5)
 
 	err = setAuthAttemptCreatedAt(ts.ctx, ts.queries, attempt.ID, fiveSecondsInsideWindowTime)
 	ts.Require().NoError(err)
@@ -30,7 +30,7 @@ func (ts *DatabaseSuite) TestGetValidAuthAttempt_RejectsAttemptOutsideWindow() {
 	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
 	ts.Require().NoError(err)
 
-	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes*time.Minute).Add(-time.Second*5)
+	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(-time.Second * 5)
 
 	err = setAuthAttemptCreatedAt(ts.ctx, ts.queries, attempt.ID, fiveSecondsBehindWindowTime)
 	ts.Require().NoError(err)
@@ -95,7 +95,7 @@ func (ts *DatabaseSuite) TestConsumeAuthAttempt_HasNoFreshnessGuard() {
 	ts.NotEqual(oneHourAgo, consumed.UsedAt.Time, "an attempt outside the window will still be stamped as used by ConsumeAuthAttempt")
 }
 
-func (ts *DatabaseSuite) TestConsumeAuthAttemptByID_RefusesAlreadyUsedAttempt() {
+func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAlreadyUsedAttempt() {
 	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
 	ts.Require().NoError(err)
 
@@ -107,7 +107,7 @@ func (ts *DatabaseSuite) TestConsumeAuthAttemptByID_RefusesAlreadyUsedAttempt() 
 	before, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
 	ts.Require().NoError(err)
 
-	err = ts.queries.ConsumeAuthAttemptByID(ts.ctx, attempt.ID)
+	err = ts.queries.ConsumeValidAuthAttempt(ts.ctx, attempt.ID)
 	ts.Require().NoError(err)
 
 	after, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
@@ -115,16 +115,16 @@ func (ts *DatabaseSuite) TestConsumeAuthAttemptByID_RefusesAlreadyUsedAttempt() 
 	ts.Equal(before.UsedAt.Time, after.UsedAt.Time)
 }
 
-func (ts *DatabaseSuite) TestConsumeAuthAttemptByID_RefusesAttemptOutsideWindow() {
+func (ts *DatabaseSuite) TestConsumeValidAuthAttempt_RefusesAttemptOutsideWindow() {
 	attempt, err := ts.queries.AuthAttemptCreate(ts.ctx, phoneNumber)
 	ts.Require().NoError(err)
 
-	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes*time.Minute).Add(-time.Second*5)
+	fiveSecondsBehindWindowTime := time.Now().Add(-service.AuthAttemptValidityWindowMinutes * time.Minute).Add(-time.Second * 5)
 
 	err = setAuthAttemptCreatedAt(ts.ctx, ts.queries, attempt.ID, fiveSecondsBehindWindowTime)
 	ts.Require().NoError(err)
 
-	err = ts.queries.ConsumeAuthAttemptByID(ts.ctx, attempt.ID)
+	err = ts.queries.ConsumeValidAuthAttempt(ts.ctx, attempt.ID)
 	ts.Require().NoError(err)
 
 	untouched, err := ts.queries.GetAuthAttempt(ts.ctx, attempt.ID)
