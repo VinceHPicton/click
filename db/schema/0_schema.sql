@@ -6,6 +6,7 @@ CREATE TABLE app.auth_attempts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     mobile VARCHAR(20) NOT NULL,
     one_time_code INTEGER NOT NULL DEFAULT (FLOOR(RANDOM()*900000 + 100000))::INT,
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '2 minutes',
     used_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

@@ -21,21 +21,23 @@ type authAttemptStartResponse struct {
 }
 
 func (s *Server) authAttemptStartLoginHandler() http.HandlerFunc {
+	service := s.service()
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, ok := decodeJSON[authAttemptStartRequest](w, r)
 		if !ok {
 			return
 		}
 
-		attempt, err := s.Queries.AuthAttemptCreate(r.Context(), req.Mobile)
+		loginAttempt, err := service.StartLogin(r.Context(), req.Mobile)
 		if err != nil {
 			writeError(w, err)
 			return
 		}
 
 		writeJSON(w, http.StatusOK, authAttemptStartResponse{
-			ID:          attempt.ID,
-			OneTimeCode: strconv.Itoa(int(attempt.OneTimeCode)),
+			ID:          loginAttempt.ID,
+			OneTimeCode: strconv.Itoa(int(loginAttempt.OneTimeCode)),
 		})
 	}
 }
