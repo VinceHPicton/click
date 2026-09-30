@@ -1,0 +1,25 @@
+name: Set up goapp
+description: Install Go and sqlc, then generate the sqlc data-access layer (it is gitignored, so every job needs it before compiling).
+
+inputs:
+  sqlc-version:
+    description: sqlc version to install. Keep in step with your local sqlc.
+    default: "1.31.1"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v7
+      with:
+        go-version-file: goapp/go.mod
+        cache-dependency-path: goapp/go.sum
+
+    - name: Set up sqlc
+      uses: sqlc-dev/setup-sqlc@v5
+      with:
+        sqlc-version: ${{ inputs.sqlc-version }}
+
+    - name: Generate sqlc code
+      shell: bash
+      run: sqlc generate

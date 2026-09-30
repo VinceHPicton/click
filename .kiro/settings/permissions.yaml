@@ -1,0 +1,11 @@
+rules:
+  - capability: shell
+    match: ["git *", "go *", "tail *", "cat  *", "grep *", "head *"]
+    effect: allow
+
+  - capability: fs_write
+    match: ["src/**", "tests/**"]
+    effect: allow
+
+  - capability: fs_read
+    effect: allow

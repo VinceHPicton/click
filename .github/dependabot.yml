@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /goapp
+    schedule:
+      interval: weekly
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/setup-goapp
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]

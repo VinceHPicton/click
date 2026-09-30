@@ -1,0 +1,206 @@
+package httpserver
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"vincehpicton/click/internal/db/factory"
+)
+
+func (ts *HandlerSuite) TestConfirmLogin() {
+	var err error
+
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
+	ts.Require().NoError(err)
+
+	req := confirmLoginRequest{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
+	}
+
+	w := ts.callConfirmLogin(req)
+
+	ts.Equal(http.StatusOK, w.Code)
+
+	refreshTokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(refreshTokens))
+
+	resp := confirmLoginResponse{}
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	ts.Require().NoError(err)
+
+	ts.Require().NotEmpty(resp.UserID)
+	ts.Require().NotEmpty(resp.AccessToken)
+	ts.Require().NotEmpty(resp.RefreshToken)
+}
+
+func (ts *HandlerSuite) TestConfirmLogin_ThenRefresh() {
+	var err error
+
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
+	ts.Require().NoError(err)
+
+	req := confirmLoginRequest{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
+	}
+
+	w := ts.callConfirmLogin(req)
+
+	ts.Equal(http.StatusOK, w.Code)
+
+	refreshTokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(refreshTokens))
+
+	resp := confirmLoginResponse{}
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	ts.Require().NoError(err)
+
+	refreshW := ts.callRefresh(resp.RefreshToken)
+
+	ts.Equal(http.StatusOK, refreshW.Code)
+
+	refreshResp := refreshResponse{}
+	err = json.Unmarshal(refreshW.Body.Bytes(), &refreshResp)
+	ts.Require().NoError(err)
+
+	ts.NotEmpty(refreshResp.AccessToken)
+	ts.NotEmpty(refreshResp.RefreshToken)
+
+	refreshTokens, err = ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	// 2 because refresh token doesnt hard delete the old one
+	ts.Equal(2, len(refreshTokens))
+}
+
+func (ts *HandlerSuite) TestConfirmLogin_UserDoesntExist() {
+	var err error
+	const randomMobile = "+447840195452"
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, randomMobile)
+	ts.Require().NoError(err)
+
+	req := confirmLoginRequest{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
+	}
+
+	w := ts.callConfirmLogin(req)
+
+	ts.Equal(http.StatusNotFound, w.Code)
+
+	refreshTokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(0, len(refreshTokens))
+}
+
+func (ts *HandlerSuite) TestConfirmLogin_UserBanned() {
+	var err error
+
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.BanUser(ts.ctx, user.ID)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
+	ts.Require().NoError(err)
+
+	req := confirmLoginRequest{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
+	}
+
+	w := ts.callConfirmLogin(req)
+
+	// TODO: banned users are not found, this might be fine; ie can show user "Your account is banned, or doesn't exist"
+	ts.Equal(http.StatusNotFound, w.Code)
+
+	refreshTokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(0, len(refreshTokens))
+}
+
+func (ts *HandlerSuite) TestConfirmLogin_UserDeleted() {
+	var err error
+
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.SoftDeleteUser(ts.ctx, user.ID)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
+	ts.Require().NoError(err)
+
+	req := confirmLoginRequest{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
+	}
+
+	w := ts.callConfirmLogin(req)
+
+	ts.Equal(http.StatusNotFound, w.Code)
+
+	refreshTokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(0, len(refreshTokens))
+}
+
+func (ts *HandlerSuite) callConfirmLogin(reqStruct confirmLoginRequest) *httptest.ResponseRecorder {
+	body, err := json.Marshal(reqStruct)
+	ts.Require().NoError(err)
+
+	url, err := ts.server.Router.Get(authAttemptConfirmLoginRouteName).URL()
+	ts.Require().NoError(err)
+
+	httpReq := httptest.NewRequest(
+		http.MethodPost,
+		url.String(),
+		bytes.NewReader(body),
+	)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	ts.server.Router.ServeHTTP(w, httpReq)
+
+	return w
+}
+
+func (ts *HandlerSuite) TestConfirmLogin_ConsumedAttemptReused() {
+	var err error
+
+	user, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, user.Mobile)
+	ts.Require().NoError(err)
+
+	req := confirmLoginRequest{
+		ID:          authAttempt.ID,
+		OneTimeCode: authAttempt.OneTimeCode,
+	}
+
+	// First call consumes the auth attempt and succeeds.
+	w := ts.callConfirmLogin(req)
+	ts.Equal(http.StatusOK, w.Code)
+
+	// Second call with the same (now consumed) auth attempt must fail.
+	reusedW := ts.callConfirmLogin(req)
+	ts.NotEqual(http.StatusOK, reusedW.Code)
+
+	// Only the first call should have produced a refresh token.
+	refreshTokens, err := ts.server.Queries.GetRefreshTokens(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(refreshTokens))
+}

@@ -1,0 +1,192 @@
+package httpserver
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"vincehpicton/click/internal/db/factory"
+
+	"github.com/google/uuid"
+)
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_Success() {
+	// Create an auth attempt first
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195455")
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+
+	ts.Equal(http.StatusOK, w.Code)
+
+	resp := confirmCreateUserResponse{}
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	ts.Require().NoError(err)
+
+	ts.NotEqual(uuid.Nil, resp.UserID)
+	ts.NotEmpty(resp.AccessToken)
+	ts.NotEmpty(resp.RefreshToken)
+
+	users, err := ts.server.Queries.GetAllUsers(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Len(users, 1)
+	ts.Equal(users[0].ID, resp.UserID)
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_BadRequest() {
+	// Invalid request body
+	w := ts.callConfirmCreateUserRaw(map[string]interface{}{
+		"id": "invalid-uuid",
+	})
+
+	ts.Equal(http.StatusBadRequest, w.Code)
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserAlreadyExists_AttemptStillUsed() {
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+
+	ts.Equal(http.StatusBadRequest, w.Code)
+
+	authAttempts, err := ts.server.Queries.GetAuthAttempts(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(authAttempts))
+
+	ts.True(authAttempts[0].UsedAt.Valid)
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserBanned_AttemptStillUsed() {
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.BanUser(ts.ctx, fakeUser.ID)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+
+	ts.Equal(http.StatusInternalServerError, w.Code)
+
+	authAttempts, err := ts.server.Queries.GetAuthAttempts(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(authAttempts))
+
+	ts.True(authAttempts[0].UsedAt.Valid)
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_UserSoftDeleted_Success() {
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	ts.server.Queries.SoftDeleteUser(ts.ctx, fakeUser.ID)
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+
+	ts.Require().Equal(http.StatusOK, w.Code)
+
+	users, err := ts.server.Queries.GetAllUsers(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(2, len(users))
+
+	authAttempts, err := ts.server.Queries.GetAuthAttempts(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(authAttempts))
+
+	ts.True(authAttempts[0].UsedAt.Valid)
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_ConsumedAttemptReused() {
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, "+447840195456")
+	ts.Require().NoError(err)
+
+	// First call consumes the auth attempt and creates the user.
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.Equal(http.StatusOK, w.Code)
+
+	// Second call with the same (now consumed) auth attempt must fail.
+	reusedW := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.Require().NotEqual(http.StatusOK, reusedW.Code)
+
+	// Only one user should have been created.
+	users, err := ts.server.Queries.GetAllUsers(ts.ctx)
+	ts.Require().NoError(err)
+	ts.Require().Equal(1, len(users))
+}
+
+func (ts *HandlerSuite) callConfirmCreateUser(id uuid.UUID, oneTimeCode int32) *httptest.ResponseRecorder {
+	return ts.callConfirmCreateUserRaw(confirmCreateUserRequest{
+		ID:          id,
+		OneTimeCode: oneTimeCode,
+	})
+}
+
+func (ts *HandlerSuite) callConfirmCreateUserRaw(body any) *httptest.ResponseRecorder {
+	bodyBytes, err := json.Marshal(body)
+	ts.Require().NoError(err)
+
+	url, err := ts.server.Router.Get(authAttemptConfirmCreateUserRouteName).URL()
+	ts.Require().NoError(err)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		url.String(),
+		bytes.NewReader(bodyBytes),
+	)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	ts.server.Router.ServeHTTP(w, req)
+
+	return w
+}
+
+// writeError's default branch exists because handlers used to pass err.Error()
+// straight to the client, leaking raw Postgres text. A banned user reaches that
+// branch: the active-user lookup filters banned_at, so the insert proceeds and
+// trips users_phone_unique_active. The body must stay generic.
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_InternalErrorDoesNotLeakDatabaseDetail() {
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	err = ts.server.Queries.BanUser(ts.ctx, fakeUser.ID)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.Require().Equal(http.StatusInternalServerError, w.Code)
+
+	body := w.Body.String()
+	ts.Equal("internal server error\n", body)
+	for _, leak := range []string{"app.users", "users_phone_unique_active", "duplicate key", "SQLSTATE", "23505"} {
+		ts.NotContains(body, leak)
+	}
+}
+
+func (ts *HandlerSuite) TestAuthAttemptCreateUserHandler_ExistingUserErrorDoesNotLeakDatabaseDetail() {
+	fakeUser, err := factory.FakeUser(ts.ctx, ts.server.Queries)
+	ts.Require().NoError(err)
+
+	authAttempt, err := factory.FakeAuthAttemptWithServiceExpiry(ts.ctx, ts.server.Queries, fakeUser.Mobile)
+	ts.Require().NoError(err)
+
+	w := ts.callConfirmCreateUser(authAttempt.ID, authAttempt.OneTimeCode)
+	ts.Require().Equal(http.StatusBadRequest, w.Code)
+
+	body := w.Body.String()
+	ts.Equal("account already exists\n", body)
+	ts.NotContains(body, fakeUser.Mobile)
+}
