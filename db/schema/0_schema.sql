@@ -2,10 +2,11 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE SCHEMA IF NOT EXISTS app;
 
-CREATE TABLE app.register_attempts (
+CREATE TABLE app.auth_attempts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     mobile VARCHAR(20) NOT NULL,
-    one_time_code INTEGER NOT NULL DEFAULT (FLOOR(RANDOM() * 900000 + 100000))::INT,
+    one_time_code INTEGER NOT NULL DEFAULT (FLOOR(RANDOM()*900000 + 100000))::INT,
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '2 minutes',
     used_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -13,16 +14,31 @@ CREATE TABLE app.register_attempts (
 CREATE TABLE app.users (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(50),
-    bio VARCHAR(1000),
+    bio VARCHAR(10000),
     birth_date DATE,
     last_location_long DECIMAL(9,6),
     last_location_lat DECIMAL(9,6),
     mobile VARCHAR(20) NOT NULL,
     last_active TIMESTAMPTZ,
-    email VARCHAR(100),
+    email VARCHAR(255),
     sex SMALLINT,
     interested_in SMALLINT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    banned_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE UNIQUE INDEX users_phone_unique_active
+ON app.users(mobile)
+WHERE deleted_at IS NULL;
+
+CREATE TABLE app.refresh_tokens (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES app.users NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ
 );
 
 CREATE TABLE app.matches (

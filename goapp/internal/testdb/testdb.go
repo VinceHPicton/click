@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	postgresDBImage = "click/dbserver"
+	postgresDBImage = "click/db"
 	SQLDriver       = "pgx"
 )
 
@@ -18,12 +18,6 @@ type TestDB struct {
 	DBURL     string
 	Container *postgres.PostgresContainer
 	Pool      *sql.DB
-}
-
-func (td *TestDB) Teardown(ctx context.Context) {
-	if td.Pool != nil {
-		td.Pool.Close()
-	}
 }
 
 func Setup(ctx context.Context) (*TestDB, error) {

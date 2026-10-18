@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Re-run weekly so newly published CVEs in dependencies get caught even when nobody pushes.
+  # schedule:
+  #   - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+# Least privilege: jobs only get read access unless they ask for more.
+permissions:
+  contents: read
+
+# A new push to a PR cancels the previous run for that PR. Runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-goapp
+
+      - name: Check go.mod and go.sum are tidy
+        working-directory: goapp
+        run: go mod tidy -diff
+
+      - name: Verify module checksums
+        working-directory: goapp
+        run: go mod verify
+
+      # Runs go vet, staticcheck, errcheck, gofmt, goimports and more. Config: goapp/.golangci.yml
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.14
+          working-directory: goapp
+          # Only fail on issues introduced by this change. Remove once existing issues are fixed.
+          only-new-issues: true
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-goapp
+
+      # testcontainers starts this image for every DB-backed test (see internal/testdb).
+      - name: Build test DB image
+        run: docker build -f build/db.dockerfile -t click/db .
+
+      - name: Run tests
+        working-directory: goapp
+        run: go test -race -count=1 -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Coverage summary
+        if: always()
+        working-directory: goapp
+        run: |
+          if [ -f coverage.out ]; then
+            echo "### Coverage" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            go tool cover -func=coverage.out | tail -n 1 >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  vulncheck:
+    name: Vulnerability scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-goapp
+
+      # Reports only vulnerabilities in code paths the app actually calls.
+      - name: govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          repo-checkout: false
+          work-dir: goapp
+          go-version-file: goapp/go.mod
+          cache-dependency-path: goapp/go.sum
+
+  migrations:
+    name: Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # TODO: remove once db/migrations is re-synced with db/schema (atlas.sum and schema currently drift).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ariga/setup-atlas@v0
+
+      - name: Validate migration directory integrity
+        run: atlas migrate validate --dir "file://db/migrations" --dev-url "docker://postgres/16/dev"
+
+      # Same command as scripts/atlasdiff.sh. If it produces a new file, a migration was forgotten.
+      - name: Check migrations match db/schema
+        run: |
+          atlas migrate diff ci_drift_check \
+            --dir "file://db/migrations" \
+            --to "file://db/schema/0_schema.sql" \
+            --dev-url "docker://postgres/16/dev"
+          if [ -n "$(git status --porcelain db/migrations)" ]; then
+            echo "::error::db/schema/0_schema.sql has changes with no migration. Run scripts/atlasdiff.sh and commit the result."
+            git status --porcelain db/migrations
+            exit 1
+          fi
+
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+
+      # Proves the production image builds. The deploy stage will push this same image to ECR.
+      - name: Build goapp image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: goapp/goapp.dockerfile
+          push: false
+          tags: click/goapp:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
